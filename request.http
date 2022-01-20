@@ -1,9 +1,7 @@
-POST http://localhost:8082/api/user/register
+POST http://localhost:8082/signin
 Content-Type: application/json
 
 {
-    "name": "A",
-    "phone": "64657",
-    "password": "122344",
-    "email": "ldfhjsfhj"
+    "phone": "1245",
+    "password": "122344"
 }

@@ -1,4 +1,4 @@
-const { Schema } = require('mongoose');
+// const { Schema } = require('mongoose');
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -13,23 +13,24 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   password: {
     type: String,
     required: true
   },
-  acc_id: {
-    // type: Schema.Types.ObjectId,
-    // ref: 'listAcc'
+  dob: {
     type: String,
-    default: ""
+    required: true
+  },
+  acc_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'listAcc'
   },
   hist_id: {
-    // type: Schema.Types.ObjectId,
-    // ref: 'listAcc'
-    type: String,
-    default: ""
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'listAcc'
   },
   balance: {
     type: Number,
@@ -37,4 +38,4 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
-module.exports = User = mongoose.model('user', UserSchema);
+module.exports = User = mongoose.model('USER_DOC', UserSchema);
