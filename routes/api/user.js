@@ -26,12 +26,12 @@ router.post('/register', async(req, res) => {
 
     //return token
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN)
-    res.json({success: true, message: "Register Successfully", accessToken})
+    res.status(200).json({success: true, message: "Register Successfully", accessToken})
 
 
   }catch(error){
     console.log(error)
-    res.status(500).json({success: false, message: "Cant"})
+    res.status(500).json({success: false, message: "Server Error"})
   }
 })
 
@@ -49,18 +49,18 @@ router.post('/signin', async(req, res) => {
       if(argon2.verify(phone_user["password"], password))
       {
       const accessToken = jwt.sign({userId: phone_user._id}, process.env.ACCESS_TOKEN)
-      res.json({success: true, message: "LogIn Successfully", accessToken})
+      res.status(200).json({success: true, message: "LogIn Successfully", accessToken})
       }
       else
-      res.json({success: false, message: "Wrong password"})
+      res.status(401).json({success: false, message: "Wrong password"})
     }
     else
     {
-      res.json({success: false, message: "Wrong phone number"})
+      res.status(401).json({success: false, message: "Unauthorized phone number"})
     }
   }catch(error){
     console.log(error)
-    res.status(500).json({success: false, message: "Cant"})
+    res.status(500).json({success: false, message: "Server Error"})
   }
 })
 
