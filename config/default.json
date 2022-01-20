@@ -1,0 +1,4 @@
+{
+  "mongoURI":
+  "mongodb+srv://payment:online-payment@onlinepayment.1z1st.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+}
