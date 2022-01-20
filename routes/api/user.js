@@ -46,7 +46,7 @@ router.post('/signin', async(req, res) => {
 
     if (phone_user)
     {
-      if(argon2.verify(phone_user["password"], password))
+      if(await argon2.verify(phone_user["password"], password))
       {
       const accessToken = jwt.sign({userId: phone_user._id}, process.env.ACCESS_TOKEN)
       res.json({success: true, message: "LogIn Successfully", accessToken})
