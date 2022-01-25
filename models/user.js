@@ -25,12 +25,12 @@ const UserSchema = new mongoose.Schema({
     required: true
   },
   acc_id: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     ref: 'listAcc'
   },
   hist_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'listAcc'
+    type: mongoose.Types.ObjectId,
+    ref: 'listTrans'
   },
   balance: {
     type: Number,

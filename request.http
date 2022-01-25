@@ -1,7 +1,6 @@
-POST http://localhost:8082/signin
+POST http://localhost:8082/getListAcc/61e927660552504308d5b7d5
 Content-Type: application/json
 
 {
-    "phone": "0123456789",
-    "password": "12334"
+    "linkType": "e-Wallet",
 }

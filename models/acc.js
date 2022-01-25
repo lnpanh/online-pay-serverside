@@ -19,10 +19,4 @@ const AccSchema = new mongoose.Schema({
     },
 });
 
-const ListAccSchema = new mongoose.Schema({
-  linkAcc: {
-    listAcc: [AccSchema]
-  }
-});
-
-module.exports = ListAcc = mongoose.model('listAcc', ListAccSchema);
+module.exports = Accs = mongoose.model('Accs', AccSchema);
