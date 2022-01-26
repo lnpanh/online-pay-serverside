@@ -2,12 +2,16 @@ const mongoose = require('mongoose');
 
 const TransSchema = new mongoose.Schema({
     name_rcv:{
-        type: String,
-        required:true
+        type: String
     },
     phone_rcv:{
-        type: String,
-        required:true
+        type: String
+    },
+    name_send:{
+        type: String
+    },
+    phone_send:{
+        type: String
     },
     amount_money:{
         type: Number,
@@ -28,13 +32,4 @@ const TransSchema = new mongoose.Schema({
     }
 });
 
-
-
-const ListTransSchema = new mongoose.Schema({
-    TransList: {
-        TransList: [TransSchema]
-    }
-  });
-
-
-module.exports = ListTrans = mongoose.model('listTrans', ListTransSchema);
+module.exports = Trans = mongoose.model('Trans', TransSchema);

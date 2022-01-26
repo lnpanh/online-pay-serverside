@@ -8,7 +8,10 @@ const jwt = require('jsonwebtoken')
 const User = require('../../models/user');
 const Acc = require('../../models/acc');
 const ListAcc = require('../../models/listacc');
+
 const Trans = require('../../models/trans');
+const ListTrans = require('../../models/listtrans');
+
 
 
 router.post('/register', async(req, res) => {
@@ -31,7 +34,7 @@ router.post('/register', async(req, res) => {
 
     //return token
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN)
-    res.status(200).json({success: true, message: "Register Successfully", accessToken})
+    res.status(200).json({success: true, message: "Register Successfully", "_id" : newUser._id})
 
 
   }catch(error){
@@ -98,98 +101,112 @@ router.post('/linkAcc/:userID', async(req, res) => {
   
 })
 
-router.post('/getListAcc/:userID', async(req, res) => {
-  
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})["acc_id"]
-  console.log(cur_user)
-
-  if (!cur_user)
+router.get('/getListAcc/:userID/:linkType', async(req, res) => {
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
+  if (cur_user == null)
   {
     return res.status(401).json({success: false, message: "Account not existed"})
   }
   else
   {
-    const cur_list = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user), linkAcc: {$elemMatch: {linkType : req.body.linkType}}})
-    console.log(cur_list)
-
-    if (cur_list.length == 0)
+    const cur_list = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {linkType : req.params.linkType}}})
+    if (cur_list == null)
     {
       return res.status(401).json({success: false, message: "This type of link account is not existed"})
     }
     else
     {
-      const data = []
-      cur_list.forEach(function(item)
+      const d = []
+      cur_list["linkAcc"].forEach(function(item)
       {
-        if (item.linkType == req.body.linkType)
+        if (item.linkType == req.params.linkType)
         {
-            data.push(item.accNum.substring(0,2) + (item.accNum.length - 4)* "*" + item.accNum.substring(-2,item.accNum.length), item.partiesName)
+          const star = '*'.repeat(item.accNum.length - 4)
+          d.push({ "accNum" : item.accNum.substring(0,2) + star + item.accNum.substring(item.accNum.length - 2,item.accNum.length), "partiesName" :item.partiesName, "_id": item._id})
         }
       })
-      console.log(data)
-      return res.status(200).json({success: true, message: "Okie", data: data})
+      
+      return res.status(200).json({success: true, message: "Okie", data: d})
     }
   }
 })
 
-
-router.post('/:userID/transaction', async(req, res) => {
-  const {type,name, phone, money, accID} = req.body
+router.post('/transaction/:userID', async(req, res) => {
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
-  const rcv_user = await User.findOne({phone})
-  if (!rcv_user)
+  const rcv_user = await User.findOne({phone: req.body.phone})
+  if (req.body.type == "transfer")
   {
-    res.status(401).json({success: false, message: "Unauthorized phone number"})
-  }
-  else
-  {
-    if (type == "Transfer")
-    {
-      if (money < cur_user["balance"])
-      {
-        const newTrans = new Trans({name, phone, money, type, accID})
-        await newTrans.save()
-        cur_user.updateOne({$inc: {balance: -money}})
-        rcv_user.updateOne({$inc: {balance: money}})
-        res.status(200).json({success: true, message: "Transfer successfully"})
-      }
-    }
-
-    else if (type == "Deposit")
-    {
-
-    }
-  }
-})
-
-
-router.get('/:userID/history', async(req, res) => {
-  const {userID} = req.body
-
-  if (!phone || !password)
-  return res.status(400).json({success: false, message: "Missing fields"})
-
-  try {
-    const phone_user = await User.findOne({phone})
-
-    if (phone_user)
-    {
-      if(await argon2.verify(phone_user["password"], password))
-      {
-      const accessToken = jwt.sign({userId: phone_user._id}, process.env.ACCESS_TOKEN)
-      res.status(200).json({success: true, message: "LogIn Successfully", accessToken})
-      }
-      else
-      res.status(401).json({success: false, message: "Wrong password"})
-    }
-    else
+    if (!rcv_user || cur_user._id == rcv_user._id)
     {
       res.status(401).json({success: false, message: "Unauthorized phone number"})
     }
-  }catch(error){
-    console.log(error)
-    res.status(500).json({success: false, message: "Server Error"})
+    else
+    {
+        if (req.body.money < cur_user["balance"])
+        {
+          const newTrans_cur = new Trans({name_rcv: req.body.name, phone_rcv: req.body.phone, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+          const newTrans_rcv = new Trans({name_send: cur_user["name"], phone_send: cur_user["phone"], amount_money: req.body.money, type: "Receive", dt: Date.now()})
+
+          await cur_user.updateOne({$inc: {balance: -req.body.money}})
+          await rcv_user.updateOne({$inc: {balance: req.body.money}})
+
+          if (cur_user["hist_id"]) 
+          {
+            await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+            res.status(200).json({success: true, message: "Transfer successfully"})
+          }
+          else
+          { 
+            const newList = new ListTrans({TransList: [newTrans_cur]})
+            await newList.save()
+            await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)}).updateOne({$set: {hist_id: newList._id}})
+            res.status(200).json({success: true, message: "Transfer successfully"})
+          }
+
+          
+          if(rcv_user["hist_id"])
+          {
+            await ListTrans.findOne({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}).updateOne({$push : {TransList: newTrans_rcv}})
+          }
+          else
+          {
+            const newList = new ListTrans({TransList: [newTrans_rcv]})
+            await newList.save()
+            await User.findOne({_id: mongoose.Types.ObjectId(rcv_user._id)}).updateOne({$set: {hist_id: newList._id}})
+          }
+
+        }
+        else
+        {
+          return res.status(401).json({success: false, message: "Unauthorized balance"})
+        }
+      } 
+  }
+  else if (req.body.type  == "Deposit")
+  {
+
+  }
+})
+
+router.get('/getHistory/:userID', async(req, res) => {
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
+  const list_trans = await ListTrans.findOne({_id: mongoose.Types.ObjectId(cur_user["hist_id"])})
+  if (list_trans == null)
+  {
+    return res.status(401).json({success: false, message: "This account has no transaction"})
+  }
+  else
+  {
+    const d = []
+    list_trans["TransList"].forEach(function(item)
+    {
+      if (item.type == "transfer")
+        d.push({"name_rcv": item.name_rcv, "phone_rcv": item.phone_rcv, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+      else 
+        d.push({"name_send": item.name_send, "phone_send": item.phone_send, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+    })
+    return res.status(200).json({success: true, message: "Okie", data: d})
   }
 })
 

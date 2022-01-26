@@ -1,6 +1,41 @@
-POST http://localhost:8082/getListAcc/61e927660552504308d5b7d5
-Content-Type: application/json
+# GET http://localhost:8082/getListAcc/61e927660552504308d5b7d5/Bank
+# Content-Type: application/json
 
-{
-    "linkType": "e-Wallet",
-}
+# {
+#     "linkType": "acb"
+# }
+
+# POST http://localhost:8082/linkAcc/61e927660552504308d5b7d5
+# Content-Type: application/json
+
+# {
+#     "accNum" : "121212121212121212155",
+#     "partiesName": "456",
+#     "token": "ABC",
+#     "linkType": "Bank"
+# }
+
+# POST http://localhost:8082/transaction/61e927660552504308d5b7d5
+# Content-Type: application/json
+
+# {
+#     "type" : "transfer",
+#     "name": "Lien",
+#     "phone": "0939807294",
+#     "money": "1000"
+# }
+
+# POST http://localhost:8082/register
+# Content-Type: application/json
+
+# {
+#     "password" : "transfer",
+#     "name": "Lien",
+#     "phone": "0939807294",
+#     "dob": "31/05/2000",
+#     "email": "lulien315@gmail.com"
+# }
+
+
+GET http://localhost:8082/getHistory/61f109812ff2802906d9888b
+
