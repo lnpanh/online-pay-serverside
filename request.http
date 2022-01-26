@@ -37,5 +37,14 @@
 # }
 
 
-GET http://localhost:8082/getHistory/61f109812ff2802906d9888b
+GET http://localhost:8082/getHistory/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDMxODk3MDh9.rC07Ccxxakc7pc6YK_ij5tSYDa9aH_HwtzI-cP6szFs
+
+
+# POST http://localhost:8082/signin
+# Content-Type: application/json
+
+# {
+#     "password" : "transfer",
+#     "phone": "0939807294"
+# }
 

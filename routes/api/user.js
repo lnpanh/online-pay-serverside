@@ -34,7 +34,8 @@ router.post('/register', async(req, res) => {
 
     //return token
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN)
-    res.status(200).json({success: true, message: "Register Successfully", "_id" : newUser._id})
+
+    res.status(200).json({success: true, message: "Register Successfully", accessToken})
 
 
   }catch(error){
@@ -72,8 +73,9 @@ router.post('/signin', async(req, res) => {
   }
 })
 
-router.post('/linkAcc/:userID', async(req, res) => {
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
+router.post('/linkAcc/:accessToken', async(req, res) => {
+  const userID = jwt.decode(req.params.accessToken)["userId"]
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   if (cur_user["acc_id"]) 
   {
     
@@ -95,14 +97,15 @@ router.post('/linkAcc/:userID', async(req, res) => {
     const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
     const newList = new ListAcc({linkAcc: [newAcc]})
     await newList.save()
-    await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)}).updateOne({$set: {acc_id: newList._id}})
+    await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
     res.status(200).json({success: true, message: "Link Account successfully"})
   }
   
 })
 
-router.get('/getListAcc/:userID/:linkType', async(req, res) => {
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
+router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
+  const userID = jwt.decode(req.params.accessToken)["userId"]
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   if (cur_user == null)
   {
     return res.status(401).json({success: false, message: "Account not existed"})
@@ -131,9 +134,10 @@ router.get('/getListAcc/:userID/:linkType', async(req, res) => {
   }
 })
 
-router.post('/transaction/:userID', async(req, res) => {
+router.post('/transaction/:accessToken', async(req, res) => {
 
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
+  const userID = jwt.decode(req.params.accessToken)["userId"]
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   const rcv_user = await User.findOne({phone: req.body.phone})
   if (req.body.type == "transfer")
   {
@@ -160,7 +164,7 @@ router.post('/transaction/:userID', async(req, res) => {
           { 
             const newList = new ListTrans({TransList: [newTrans_cur]})
             await newList.save()
-            await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)}).updateOne({$set: {hist_id: newList._id}})
+            await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
             res.status(200).json({success: true, message: "Transfer successfully"})
           }
 
@@ -189,8 +193,9 @@ router.post('/transaction/:userID', async(req, res) => {
   }
 })
 
-router.get('/getHistory/:userID', async(req, res) => {
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
+router.get('/getHistory/:accessToken', async(req, res) => {
+  const userID = jwt.decode(req.params.accessToken)["userId"]
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   const list_trans = await ListTrans.findOne({_id: mongoose.Types.ObjectId(cur_user["hist_id"])})
   if (list_trans == null)
   {
