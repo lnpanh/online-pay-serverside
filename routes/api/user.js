@@ -266,8 +266,23 @@ router.post("/sendsms", function(req, res) {
   let fromPhone = req.body.fromPhone;
   let toPhone = req.body.toPhone;
   let content = req.body.content;
+
+  if (!fromPhone || !toPhone || !content)
+    return res.status(400).json({success: false, message: "Missing fields"})
+    
+  console.log(fromPhone, toPhone, content)
+  
   sendSMS(fromPhone, toPhone, content, function(responseData){
       console.log(responseData);
+      // if (responseData.messages[0].status == "0") {
+      //   return res.status(200).json({success: true, message: "Send successfully"})
+      // }
+      // else
+      // {
+      //   return res.status(401).json({success: false, message: "Send failed"})
+      // }
+      return res.status(200).json({success: true, message: responseData})
+      
   });
 })
 
