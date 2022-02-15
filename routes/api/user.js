@@ -141,8 +141,9 @@ router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
       {
         if (item.linkType == req.params.linkType)
         {
-          const star = '*'.repeat(item.accNum.length - 4)
-          d.push({ "accNum" : item.accNum.substring(0,2) + star + item.accNum.substring(item.accNum.length - 2,item.accNum.length), "partiesName" :item.partiesName, "_id": item._id})
+          const num = encode(item.accNum)
+          d.push({ "accNum" : num, "partiesName" :item.partiesName, "_id": item._id})
+          
         }
       })
       
@@ -206,10 +207,17 @@ router.post('/transaction/:accessToken', async(req, res) => {
   }
   else if (req.body.type  == "deposit")
   {
-    const newTrans_cur = new Trans({name_3rd_party: req.body.name, num_3rd_party: req.body.num, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
-    
-    await cur_user.updateOne({$inc: {balance: req.body.money}})
+    const cur_acc = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])})
+    var newTrans_cur = new Trans()
+    cur_acc["linkAcc"].forEach(function(item)
+    {
+      if (item._id == req.body._id)
+      {
+        newTrans_cur = new Trans({name_3rd_party: item.partiesName, num_3rd_party: encode(item.accNum), amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+      }  
+    })
 
+    await cur_user.updateOne({$inc: {balance: req.body.money}})
     if (cur_user["hist_id"]) 
     {
       await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
@@ -236,15 +244,19 @@ router.get('/getHistory/:accessToken', async(req, res) => {
   else
   {
     const d = []
+    const now = new Date()
+    const month = now.getMonth() 
     list_trans["TransList"].forEach(function(item)
     {
-      if (item.type == "transfer")
-        d.push({"name_rcv": item.name_rcv, "phone_rcv": item.phone_rcv, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
-      else if (item.type == "Receive")
-        d.push({"name_send": item.name_send, "phone_send": item.phone_send, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
-      else if (item.type == "deposit")
-        d.push({"name_account": item.name_3rd_party, "num_account": item.num_3rd_party, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
-
+      if (item.dt.getMonth() == month)
+      {
+        if (item.type == "transfer")
+          d.push({"name_rcv": item.name_rcv, "phone_rcv": item.phone_rcv, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+        else if (item.type == "Receive")
+          d.push({"name_send": item.name_send, "phone_send": item.phone_send, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+        else if (item.type == "deposit")
+          d.push({"name_account": item.name_3rd_party, "num_account": item.num_3rd_party, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+      }
     })
     return res.status(200).json({success: true, message: "Okie", data: d})
   }
@@ -273,6 +285,12 @@ function sendSMS(fromPhone, toPhone, content, callback){
         }
       }
     })
+}
+
+function encode(account)
+{
+  const star = '*'.repeat(account.length - 4)
+  return account.substring(0,2) + star + account.substring(account.length - 2,account.length)
 }
 
 
