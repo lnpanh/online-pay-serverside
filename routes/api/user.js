@@ -274,15 +274,13 @@ router.post("/sendsms", function(req, res) {
   
   sendSMS(fromPhone, toPhone, content, function(responseData){
       console.log(responseData);
-      // if (responseData.messages[0].status == "0") {
-      //   return res.status(200).json({success: true, message: "Send successfully"})
-      // }
-      // else
-      // {
-      //   return res.status(401).json({success: false, message: "Send failed"})
-      // }
-      return res.status(200).json({success: true, message: responseData})
-      
+      if (responseData === "Message sent successfully.") {
+        return res.status(200).json({success: true, message: responseData})
+      }
+      else
+      {
+        return res.status(401).json({success: false, message: "Send failed: " + responseData})
+      } 
   });
 })
 
