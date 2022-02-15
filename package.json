@@ -28,8 +28,11 @@
     "dotenv": "^14.2.0",
     "encoding": "^0.1.13",
     "express": "^4.17.2",
+    "firebase": "^9.6.6",
+    "firebaseui": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.5.15",
+    "nexmo": "^2.9.1",
     "react-router-dom": "^6.2.1",
     "validation": "0.0.1"
   },

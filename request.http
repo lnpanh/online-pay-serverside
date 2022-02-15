@@ -31,13 +31,13 @@
 # {
 #     "password" : "transfer",
 #     "name": "Lien",
-#     "phone": "0939807294",
+#     "phone": "0939807295",
 #     "dob": "31/05/2000",
-#     "email": "lulien315@gmail.com"
+#     "email": "lulien32@gmail.com"
 # }
 
 
-GET http://localhost:8082/getHistory/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDMxODk3MDh9.rC07Ccxxakc7pc6YK_ij5tSYDa9aH_HwtzI-cP6szFs
+# GET http://localhost:8082/getHistory/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDMxODk3MDh9.rC07Ccxxakc7pc6YK_ij5tSYDa9aH_HwtzI-cP6szFs
 
 
 # POST http://localhost:8082/signin

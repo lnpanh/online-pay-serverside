@@ -13,6 +13,23 @@ const Trans = require('../../models/trans');
 const ListTrans = require('../../models/listtrans');
 
 
+const Nexmo = require('nexmo')
+const nexmo = new Nexmo({
+  apiKey: "9ea4f114",
+  apiSecret: "hL2iD1UQstu8vmzU"
+})
+
+
+// const firebaseConfig = {
+//     apiKey: "AIzaSyAWy9R-DeZXjaBkPd2D1HoLYEXuPN7mMic",
+//     authDomain: "online-payment-bb087.firebaseapp.com",
+//     projectId: "online-payment-bb087",
+//     storageBucket: "online-payment-bb087.appspot.com",
+//     messagingSenderId: "449203698562",
+//     appId: "1:449203698562:web:312c855ad32c5ce75a2d9b",
+//     measurementId: "G-CB6D9XV3DY"
+//   };
+
 
 router.post('/register', async(req, res) => {
   const {name,phone,password, email, dob} = req.body
@@ -135,12 +152,12 @@ router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
 })
 
 router.post('/transaction/:accessToken', async(req, res) => {
-
   const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  const rcv_user = await User.findOne({phone: req.body.phone})
+  
   if (req.body.type == "transfer")
   {
+    const rcv_user = await User.findOne({phone: req.body.phone})
     if (!rcv_user || cur_user._id == rcv_user._id)
     {
       res.status(401).json({success: false, message: "Unauthorized phone number"})
@@ -187,9 +204,24 @@ router.post('/transaction/:accessToken', async(req, res) => {
         }
       } 
   }
-  else if (req.body.type  == "Deposit")
+  else if (req.body.type  == "deposit")
   {
+    const newTrans_cur = new Trans({name_3rd_party: req.body.name, num_3rd_party: req.body.num, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+    
+    await cur_user.updateOne({$inc: {balance: req.body.money}})
 
+    if (cur_user["hist_id"]) 
+    {
+      await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+      res.status(200).json({success: true, message: "Deposit successfully"})
+    }
+    else
+    { 
+      const newList = new ListTrans({TransList: [newTrans_cur]})
+      await newList.save()
+      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
+      res.status(200).json({success: true, message: "Deposit successfully"})  
+    }
   }
 })
 
@@ -208,11 +240,41 @@ router.get('/getHistory/:accessToken', async(req, res) => {
     {
       if (item.type == "transfer")
         d.push({"name_rcv": item.name_rcv, "phone_rcv": item.phone_rcv, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
-      else 
+      else if (item.type == "Receive")
         d.push({"name_send": item.name_send, "phone_send": item.phone_send, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+      else if (item.type == "deposit")
+        d.push({"name_account": item.name_3rd_party, "num_account": item.num_3rd_party, "amount_money": item.amount_money, "type": item.type , "dt": item.dt})
+
     })
     return res.status(200).json({success: true, message: "Okie", data: d})
   }
 })
 
+router.post("/sendsms", function(req, res) {
+  let fromPhone = req.body.fromPhone;
+  let toPhone = req.body.toPhone;
+  let content = req.body.content;
+  sendSMS(fromPhone, toPhone, content, function(responseData){
+      console.log(responseData);
+  });
+})
+
+function sendSMS(fromPhone, toPhone, content, callback){
+  nexmo.message.sendSms(fromPhone, toPhone, content, {
+      type: "unicode"
+    }, (err, responseData) => {
+      if (err) {
+        console.log(err);
+      } else { 
+        if (responseData.messages[0]['status'] === "0") {
+          callback("Message sent successfully.")
+        } else {
+          callback(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+        }
+      }
+    })
+}
+
+
 module.exports = router;
+

@@ -10,6 +10,15 @@ const TransSchema = new mongoose.Schema({
     name_send:{
         type: String
     },
+
+    name_3rd_party:{
+        type: String
+    },
+
+    num_3rd_party:{
+        type: String
+    },
+
     phone_send:{
         type: String
     },
