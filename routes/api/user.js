@@ -56,18 +56,15 @@ router.post('/signin', async(req, res) => {
 
     const cur_user = await User.findOne({phone: req.body.phone})
     const phone_user= cur_user["phone"]
-    const ischeck = cur_user["isCheck"]
 
     if (phone_user)
     {
-      if(await argon2.verify(cur_user["password"], req.body.password) && ischeck == true)
+      if(await argon2.verify(cur_user["password"], req.body.password) )
       {
       const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN)
       res.status(200).json({success: true, message: "LogIn Successfully", accessToken})
       }
-      else if (await argon2.verify(cur_user["password"], req.body.password) && ischeck == false)
-        res.status(200).json({success: true, message: "Verify phone"})
-      else if (!await argon2.verify(phone_user["password"], req.body.password))
+      else 
         res.status(401).json({success: cur_user, message: "Wrong password"})
 
     }
