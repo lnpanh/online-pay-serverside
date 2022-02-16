@@ -62,23 +62,27 @@ router.post('/register', async(req, res) => {
 })
 
 router.post('/signin', async(req, res) => {
-  const {phone,password} = req.body
-
-  if (!phone || !password)
+  if (!req.body.phone || !req.body.password)
   return res.status(400).json({success: false, message: "Missing fields"})
 
   try {
-    const phone_user = await User.findOne({phone})
+
+    const cur_user = await User.findOne({phone: req.body.phone})
+    const phone_user= cur_user["phone"]
+    const ischeck = cur_user["isCheck"]
 
     if (phone_user)
     {
-      if(await argon2.verify(phone_user["password"], password))
+      if(await argon2.verify(cur_user["password"], req.body.password) && ischeck == true)
       {
-      const accessToken = jwt.sign({userId: phone_user._id}, process.env.ACCESS_TOKEN)
+      const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN)
       res.status(200).json({success: true, message: "LogIn Successfully", accessToken})
       }
-      else
-      res.status(401).json({success: false, message: "Wrong password"})
+      else if (await argon2.verify(cur_user["password"], req.body.password) && ischeck == false)
+        res.status(200).json({success: true, message: "Verify phone"})
+      else if (!await argon2.verify(phone_user["password"], req.body.password))
+        res.status(401).json({success: cur_user, message: "Wrong password"})
+
     }
     else
     {
@@ -306,6 +310,27 @@ function encode(account)
   return account.substring(0,2) + star + account.substring(account.length - 2,account.length)
 }
 
+
+router.post("/OTPcheck/:accessToken", async(req,res) =>{
+  const userID = jwt.decode(req.params.accessToken)["userId"]
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+  if (cur_user == null)
+  {
+    return res.status(401).json({success: false, message: "Account not existed"})
+  }
+  else
+  {
+    if (req.body.check == "true")
+    {
+      await cur_user.updateOne({ _id: userID },{"$set":{"isCheck":true}})
+      return res.status(200).json({success: true, message: "checkOTP successfully"})
+    }
+    else
+    {
+      return res.status(500).json({success: false, message: "Incorrect"})
+    }
+  }
+})
 
 module.exports = router;
 
