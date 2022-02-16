@@ -21,13 +21,6 @@ const UserSchema = new mongoose.Schema({
     required: true
   },
 
-  isCheck:
-  {
-    type: Boolean,
-    required: true,
-    default: false
-  },
-  
   dob: {
     type: String,
     required: true

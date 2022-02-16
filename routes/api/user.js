@@ -12,24 +12,11 @@ const ListAcc = require('../../models/listacc');
 const Trans = require('../../models/trans');
 const ListTrans = require('../../models/listtrans');
 
-
-const Nexmo = require('nexmo')
-const nexmo = new Nexmo({
-  apiKey: "9ea4f114",
-  apiSecret: "hL2iD1UQstu8vmzU"
-})
-
-
-// const firebaseConfig = {
-//     apiKey: "AIzaSyAWy9R-DeZXjaBkPd2D1HoLYEXuPN7mMic",
-//     authDomain: "online-payment-bb087.firebaseapp.com",
-//     projectId: "online-payment-bb087",
-//     storageBucket: "online-payment-bb087.appspot.com",
-//     messagingSenderId: "449203698562",
-//     appId: "1:449203698562:web:312c855ad32c5ce75a2d9b",
-//     measurementId: "G-CB6D9XV3DY"
-//   };
-
+// const Nexmo = require('nexmo')
+// const nexmo = new Nexmo({
+//   apiKey: "9ea4f114",
+//   apiSecret: "hL2iD1UQstu8vmzU"
+// })
 
 router.post('/register', async(req, res) => {
   const {name,phone,password, email, dob} = req.body
@@ -266,71 +253,49 @@ router.get('/getHistory/:accessToken', async(req, res) => {
   }
 })
 
-router.post("/sendsms", function(req, res) {
-  let fromPhone = req.body.fromPhone;
-  let toPhone = req.body.toPhone;
-  let content = req.body.content;
+// router.post("/sendsms", function(req, res) {
+//   let fromPhone = req.body.fromPhone;
+//   let toPhone = req.body.toPhone;
+//   let content = req.body.content;
 
-  if (!fromPhone || !toPhone || !content)
-    return res.status(400).json({success: false, message: "Missing fields"})
+//   if (!fromPhone || !toPhone || !content)
+//     return res.status(400).json({success: false, message: "Missing fields"})
     
-  console.log(fromPhone, toPhone, content)
+//   console.log(fromPhone, toPhone, content)
   
-  sendSMS(fromPhone, toPhone, content, function(responseData){
-      console.log(responseData);
-      if (responseData === "Message sent successfully.") {
-        return res.status(200).json({success: true, message: responseData})
-      }
-      else
-      {
-        return res.status(401).json({success: false, message: "Send failed: " + responseData})
-      } 
-  });
-})
+//   sendSMS(fromPhone, toPhone, content, function(responseData){
+//       console.log(responseData);
+//       if (responseData === "Message sent successfully.") {
+//         return res.status(200).json({success: true, message: responseData})
+//       }
+//       else
+//       {
+//         return res.status(401).json({success: false, message: "Send failed: " + responseData})
+//       } 
+//   });
+// })
 
-function sendSMS(fromPhone, toPhone, content, callback){
-  nexmo.message.sendSms(fromPhone, toPhone, content, {
-      type: "unicode"
-    }, (err, responseData) => {
-      if (err) {
-        console.log(err);
-      } else { 
-        if (responseData.messages[0]['status'] === "0") {
-          callback("Message sent successfully.")
-        } else {
-          callback(`Message failed with error: ${responseData.messages[0]['error-text']}`);
-        }
-      }
-    })
-}
+// function sendSMS(fromPhone, toPhone, content, callback){
+//   nexmo.message.sendSms(fromPhone, toPhone, content, {
+//       type: "unicode"
+//     }, (err, responseData) => {
+//       if (err) {
+//         console.log(err);
+//       } else { 
+//         if (responseData.messages[0]['status'] === "0") {
+//           callback("Message sent successfully.")
+//         } else {
+//           callback(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+//         }
+//       }
+//     })
+// }
 
 function encode(account)
 {
   const star = '*'.repeat(account.length - 4)
   return account.substring(0,2) + star + account.substring(account.length - 2,account.length)
 }
-
-
-router.post("/OTPcheck/:accessToken", async(req,res) =>{
-  const userID = jwt.decode(req.params.accessToken)["userId"]
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  if (cur_user == null)
-  {
-    return res.status(401).json({success: false, message: "Account not existed"})
-  }
-  else
-  {
-    if (req.body.check == "true")
-    {
-      await cur_user.updateOne({ _id: userID },{"$set":{"isCheck":true}})
-      return res.status(200).json({success: true, message: "checkOTP successfully"})
-    }
-    else
-    {
-      return res.status(500).json({success: false, message: "Incorrect"})
-    }
-  }
-})
 
 module.exports = router;
 
