@@ -19,12 +19,12 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // use Routes
+
 app.use('/', user);
+// app.get('/', (req, res) => res.sendFile(__dirname + "/index.html"));
 
 
 //use nexmo
-
-
 
 const port = process.env.PORT || 8082;
 

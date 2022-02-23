@@ -12,6 +12,15 @@ const ListAcc = require('../../models/listacc');
 const Trans = require('../../models/trans');
 const ListTrans = require('../../models/listtrans');
 
+const paypal = require('paypal-rest-sdk');
+
+paypal.configure({
+  'mode': 'sandbox', //sandbox or live
+  'client_id': 'ARciZMkxvE2KsX6N7SxCZEZ-euR-AG997zgxPfQhsQGeAaM2sQI9V7x9beZNDwZovvuDsARAFH2_L_dB',
+  'client_secret': 'ED4Z3xBxpBZml0VCQCZQz5QfSiQ-H2VLOYDfR5D7bGEMKxMKnDFcffdXIy46TfZzPoRlMjTMtxfAr-yx'
+});
+
+
 // const Nexmo = require('nexmo')
 // const nexmo = new Nexmo({
 //   apiKey: "9ea4f114",
@@ -219,6 +228,31 @@ router.post('/transaction/:accessToken', async(req, res) => {
       res.status(200).json({success: true, message: "Deposit successfully"})  
     }
   }
+
+
+  // else if (req.body.type == "payviapaypal")
+  // {
+  //   const rcv_user = infor["transactions"][0]["payee"]["email"]
+  //   const total_money = infor["transactions"][0]["amount"]["total"]
+  //   const d = infor["update_time"]
+
+  //   const newTrans_cur = new Trans({name_rcv: rcv_user, amount_money: total_money, type: "payviapaypal", dt: Date(d)})
+
+  //   if (cur_user["hist_id"]) 
+  //   {
+  //     await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+  //     res.status(200).json({success: true, message: "Payment successfully"})
+  //   }
+  //   else
+  //   { 
+  //     const newList = new ListTrans({TransList: [newTrans_cur]})
+  //     await newList.save()
+  //     await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
+  //     return res.status(200).json({success: true, message: "Payment successfully"})
+  //   }  
+  // }
+//   });
+//   }
 })
 
 router.get('/getHistory/:accessToken', async(req, res) => {
@@ -300,6 +334,114 @@ router.post("/getInfor/:accessToken", async(req, res)=>{
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   return res.status(200).json({success: true, message: "Get information successfully",data: cur_user})
 })
+
+
+router.post('/paypal/:accessToken', async(req, res) => {
+  const host = req.get('host');
+  const create_payment_json = {
+    "intent": "sale",
+    "payer": {
+        "payment_method": "paypal"
+    },
+    "redirect_urls": {
+        "return_url": "https://onlpay-test.herokuapp.com/paypalsuccess/" + req.params.accessToken,
+        "cancel_url": "https://onlpay-test.herokuapp.com/cancel/" + req.params.accessToken
+    },
+    "transactions": [{
+        "item_list": {
+            "items": [{
+                "name": "Redhock Bar Soap",
+                "sku": "001",
+                "price": "10.00",
+                "currency": "USD",
+                "quantity": 1
+            }]
+        },
+        "amount": {
+            "currency": "USD",
+            "total": "10.00"
+        },
+        "description": "Washing Bar soap"
+    }]
+};
+
+paypal.payment.create(create_payment_json, function (error, payment) {
+  if (error) {
+      // throw error;
+      return res.status(400).json({success: false, message: error});
+  } else {
+      for(let i = 0;i < payment.links.length;i++){
+        if(payment.links[i].rel === 'approval_url'){
+          res.redirect(payment.links[i].href);
+        }
+      }
+  }
+});
+});
+
+
+router.get('/paypalsuccess/:accessToken', async(req, res) => {
+  // const userID = jwt.decode(req.params.accessToken)["userId"]
+  // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+
+  const payerId = req.query.PayerID;
+  const paymentId = req.query.paymentId;
+
+  const execute_payment_json = {
+    "payer_id": payerId,
+    "transactions": [{
+        "amount": {
+            "currency": "USD",
+            "total": "10.00"
+        }
+    }]
+  };
+
+  var infor;
+// Obtains the transaction details from paypal
+  paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
+      //When error occurs when due to non-existent transaction, throw an error else log the transaction details in the console then send a Success string reposponse to the user.
+    if (error) {
+        // console.log(error.response);
+        return res.status(400).json({success: false, message: error});
+    } 
+    else {
+        const rcv_user = payment["transactions"][0]["payee"]["email"]
+        const total_money = payment["transactions"][0]["amount"]["total"]
+        const d = payment["update_time"]
+
+        console.log("https://onlpay-test.herokuapp.com/transaction/" + req.params.accessToken + "/payviapaypal?rcv_user=" + rcv_user + "&total_money=" + total_money + "&date=" + d)
+        return res.status(200).json({success: true, message: "Paid"});
+    }
+});
+});
+
+router.get('/cancel', async(req, res) => res.status(400).json({success: false, message: "false"}));
+
+
+
+// router.post("/sendsmsbytwillo", function(req, res) {
+//   const FROM_NUMBER = '+19362364789';
+//   const TO_NUMBER = '+84939807294';
+//   // const TO_NUMBER = '+84931873551';
+
+//   const AUTH_TOKEN = 'bd616461869461e4a19e440e6376ace2';
+//   const ACCOUNT_SID = 'AC24c7ad92d2eea7c5aa99563414ae90de';
+  
+//   const client = require('twilio')(ACCOUNT_SID, AUTH_TOKEN);
+  
+//   client.messages
+//       .create({
+//         body: '123456',
+//         from: FROM_NUMBER,
+//         to: TO_NUMBER
+//       })
+//       .then(message => {
+//         console.log(message);
+//       }).catch((error) => {
+//         console.log(error)
+//       });
+// })
 
 module.exports = router;
 
