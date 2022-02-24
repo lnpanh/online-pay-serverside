@@ -484,7 +484,8 @@ router.post('/create_payment_url', function (req, res, next) {
   var signData = querystring.stringify(vnp_Params, { encode: false });
   var crypto = require("crypto");     
   var hmac = crypto.createHmac("sha512", secretKey);
-  var signed = hmac.update(new Buffer.alloc(signData.length, 'utf-8')).digest("hex"); 
+  // var signed = hmac.update(new Buffer.alloc(signData.length, 'utf-8')).digest("hex"); 
+  var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex"); 
   vnp_Params['vnp_SecureHash'] = signed;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
@@ -492,6 +493,7 @@ router.post('/create_payment_url', function (req, res, next) {
 });
 
 router.get('/vnpay_return', function (req, res, next) {
+  console.log("hello")
   var vnp_Params = req.query;
 
   var secureHash = vnp_Params['vnp_SecureHash'];
@@ -509,14 +511,13 @@ router.get('/vnpay_return', function (req, res, next) {
   var signData = querystring.stringify(vnp_Params, { encode: false });
   var crypto = require("crypto");     
   var hmac = crypto.createHmac("sha512", secretKey);
-  var signed = hmac.update(new Buffer.alloc(signData, 'utf-8')).digest("hex");     
+  var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex");     
 
   if(secureHash === signed){
       //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
-
-      res.render('success', {code: vnp_Params['vnp_ResponseCode']})
+      res.status(200).json('success', {code: vnp_Params['vnp_ResponseCode']})
   } else{
-      res.render('success', {code: '97'})
+      res.status(400).json('fail', {code: '97'})
   }
 });
 
