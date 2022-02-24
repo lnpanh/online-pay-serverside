@@ -3,7 +3,6 @@
 const express = require('express');
 const connectDB = require('./config/db');
 var cors = require('cors');
-
 // routes
 const user = require('./routes/api/user');
 

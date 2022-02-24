@@ -1,9 +1,11 @@
 require('dotenv').config()
+
 const express = require('express');
 var mongoose = require('mongoose');
 const router = express.Router();
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
+
 
 const User = require('../../models/user');
 const Acc = require('../../models/acc');
@@ -11,6 +13,8 @@ const ListAcc = require('../../models/listacc');
 
 const Trans = require('../../models/trans');
 const ListTrans = require('../../models/listtrans');
+
+
 
 const paypal = require('paypal-rest-sdk');
 
@@ -20,6 +24,14 @@ paypal.configure({
   'client_secret': 'ED4Z3xBxpBZml0VCQCZQz5QfSiQ-H2VLOYDfR5D7bGEMKxMKnDFcffdXIy46TfZzPoRlMjTMtxfAr-yx'
 });
 
+const config = require('../../config/default.json');
+var dateFormat = require('x-date');
+
+var $ = require('jquery');
+var tmnCode = config['vnp_TmnCode'];
+var secretKey = config['vnp_HashSecret'];
+var vnpUrl = config['vnp_Url'];
+var returnUrl = config['vnp_ReturnUrl'];
 
 // const Nexmo = require('nexmo')
 // const nexmo = new Nexmo({
@@ -229,31 +241,30 @@ router.post('/transaction/:accessToken', async(req, res) => {
     }
   }
 
+  else if (req.query.type == "payviapaypal")
+  {
+    console.log("Hello")
+    const rcv_user = infor["transactions"][0]["payee"]["email"]
+    const total_money = infor["transactions"][0]["amount"]["total"]
+    const d = infor["update_time"]
 
-  // else if (req.body.type == "payviapaypal")
-  // {
-  //   const rcv_user = infor["transactions"][0]["payee"]["email"]
-  //   const total_money = infor["transactions"][0]["amount"]["total"]
-  //   const d = infor["update_time"]
+    const newTrans_cur = new Trans({name_rcv: rcv_user, amount_money: total_money, type: "payviapaypal", dt: Date(d)})
 
-  //   const newTrans_cur = new Trans({name_rcv: rcv_user, amount_money: total_money, type: "payviapaypal", dt: Date(d)})
+    if (cur_user["hist_id"]) 
+    {
+      await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+      res.status(200).json({success: true, message: "Payment successfully"})
+    }
+    else
+    { 
+      const newList = new ListTrans({TransList: [newTrans_cur]})
+      await newList.save()
+      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
+      return res.status(200).json({success: true, message: "Payment successfully"})
+    }  
+  }
+  });
 
-  //   if (cur_user["hist_id"]) 
-  //   {
-  //     await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
-  //     res.status(200).json({success: true, message: "Payment successfully"})
-  //   }
-  //   else
-  //   { 
-  //     const newList = new ListTrans({TransList: [newTrans_cur]})
-  //     await newList.save()
-  //     await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
-  //     return res.status(200).json({success: true, message: "Payment successfully"})
-  //   }  
-  // }
-//   });
-//   }
-})
 
 router.get('/getHistory/:accessToken', async(req, res) => {
   const userID = jwt.decode(req.params.accessToken)["userId"]
@@ -337,15 +348,15 @@ router.post("/getInfor/:accessToken", async(req, res)=>{
 
 
 router.post('/paypal/:accessToken', async(req, res) => {
-  const host = req.get('host');
+  // const host = req.get('host');
   const create_payment_json = {
     "intent": "sale",
     "payer": {
         "payment_method": "paypal"
     },
     "redirect_urls": {
-        "return_url": "https://onlpay-test.herokuapp.com/paypalsuccess/" + req.params.accessToken,
-        "cancel_url": "https://onlpay-test.herokuapp.com/cancel/" + req.params.accessToken
+        "return_url": "http://localhost:8082/paypalsuccess/" + req.params.accessToken,
+        "cancel_url": "http://localhost:8082/cancel/" + req.params.accessToken
     },
     "transactions": [{
         "item_list": {
@@ -410,8 +421,8 @@ router.get('/paypalsuccess/:accessToken', async(req, res) => {
         const total_money = payment["transactions"][0]["amount"]["total"]
         const d = payment["update_time"]
 
-        console.log("https://onlpay-test.herokuapp.com/transaction/" + req.params.accessToken + "/payviapaypal?rcv_user=" + rcv_user + "&total_money=" + total_money + "&date=" + d)
-        return res.status(200).json({success: true, message: "Paid"});
+        res.redirect(308, "http://localhost:8082/transaction/" + req.params.accessToken + "?type=payviapaypal?rcv_user=" + rcv_user + "&total_money=" + total_money + "&date=" + d)
+        // return res.status(200).json({success: true, message: "Paid"});
     }
 });
 });
@@ -419,6 +430,139 @@ router.get('/paypalsuccess/:accessToken', async(req, res) => {
 router.get('/cancel', async(req, res) => res.status(400).json({success: false, message: "false"}));
 
 
+router.get('/create_payment_url', function (req, res, next) {
+  var date = new Date();
+  var createDate = date.format('yyyy-mm-dd HH:mm:ss')
+  var desc = 'Thanh toan don hang thoi gian: ' + createDate;
+  res.status(200).json({title: 'Tạo mới đơn hàng', amount: 10000, description: desc})
+});
+
+router.post('/create_payment_url', function (req, res, next) {
+  var ipAddr = req.headers['x-forwarded-for'] ||
+    req.socket.remoteAddress||
+      req.remoteAddress ||
+      req.socket.remoteAddress;
+
+  if (ipAddr.substr(0, 7) == "::ffff:") {
+    ipAddr = ipAddr.substr(7)}
+
+  var date = new Date();
+  var createDate = date.format('yyyymmddHHmmss');
+  var orderId = date.format('HHmmss');
+
+  var amount = parseInt(req.body.amount,10);
+  var bankCode = req.body.bankCode;
+  
+  var orderInfo = req.body.orderDescription;
+  var orderType = req.body.orderType;
+  var locale = req.body.language;
+  if(locale === null || locale === ''){
+      locale = 'vn';
+  }
+  var currCode = 'VND';
+  var vnp_Params = {};
+  vnp_Params['vnp_Version'] = '2.1.0';
+  vnp_Params['vnp_Command'] = 'pay';
+  vnp_Params['vnp_TmnCode'] = tmnCode;
+  // vnp_Params['vnp_Merchant'] = ''
+  vnp_Params['vnp_Locale'] = locale;
+  vnp_Params['vnp_CurrCode'] = currCode;
+  vnp_Params['vnp_TxnRef'] = orderId;
+  vnp_Params['vnp_OrderInfo'] = orderInfo;
+  vnp_Params['vnp_OrderType'] = orderType;
+  vnp_Params['vnp_Amount'] = amount * 100;
+  vnp_Params['vnp_ReturnUrl'] = returnUrl;
+  vnp_Params['vnp_IpAddr'] = ipAddr;
+  vnp_Params['vnp_CreateDate'] = createDate;
+  if(bankCode !== null && bankCode !== ''){
+      vnp_Params['vnp_BankCode'] = bankCode;
+  }
+
+  vnp_Params = sortObject(vnp_Params);
+
+  var querystring = require('qs');
+  var signData = querystring.stringify(vnp_Params, { encode: false });
+  var crypto = require("crypto");     
+  var hmac = crypto.createHmac("sha512", secretKey);
+  var signed = hmac.update(new Buffer.alloc(signData.length, 'utf-8')).digest("hex"); 
+  vnp_Params['vnp_SecureHash'] = signed;
+  vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
+
+  res.redirect(vnpUrl)
+});
+
+router.get('/vnpay_return', function (req, res, next) {
+  var vnp_Params = req.query;
+
+  var secureHash = vnp_Params['vnp_SecureHash'];
+
+  delete vnp_Params['vnp_SecureHash'];
+  delete vnp_Params['vnp_SecureHashType'];
+
+  vnp_Params = sortObject(vnp_Params);
+
+  var config = require('config');
+  var tmnCode = config.get('vnp_TmnCode');
+  var secretKey = config.get('vnp_HashSecret');
+
+  var querystring = require('qs');
+  var signData = querystring.stringify(vnp_Params, { encode: false });
+  var crypto = require("crypto");     
+  var hmac = crypto.createHmac("sha512", secretKey);
+  var signed = hmac.update(new Buffer.alloc(signData, 'utf-8')).digest("hex");     
+
+  if(secureHash === signed){
+      //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
+
+      res.render('success', {code: vnp_Params['vnp_ResponseCode']})
+  } else{
+      res.render('success', {code: '97'})
+  }
+});
+
+router.get('/vnpay_ipn', function (req, res, next) {
+  var vnp_Params = req.query;
+  var secureHash = vnp_Params['vnp_SecureHash'];
+
+  delete vnp_Params['vnp_SecureHash'];
+  delete vnp_Params['vnp_SecureHashType'];
+
+  vnp_Params = sortObject(vnp_Params);
+  var config = require('config');
+  var secretKey = config.get('vnp_HashSecret');
+  var querystring = require('qs');
+  var signData = querystring.stringify(vnp_Params, { encode: false });
+  var crypto = require("crypto");     
+  var hmac = crypto.createHmac("sha512", secretKey);
+  var signed = hmac.update(new Buffer.alloc(signData, 'utf-8')).digest("hex");     
+   
+
+  if(secureHash === signed){
+      var orderId = vnp_Params['vnp_TxnRef'];
+      var rspCode = vnp_Params['vnp_ResponseCode'];
+      //Kiem tra du lieu co hop le khong, cap nhat trang thai don hang va gui ket qua cho VNPAY theo dinh dang duoi
+      res.status(200).json({RspCode: '00', Message: 'success'})
+  }
+  else {
+      res.status(200).json({RspCode: '97', Message: 'Fail checksum'})
+  }
+});
+
+function sortObject(obj) {
+var sorted = {};
+var str = [];
+var key;
+for (key in obj){
+  if (obj.hasOwnProperty(key)) {
+  str.push(encodeURIComponent(key));
+  }
+}
+str.sort();
+  for (key = 0; key < str.length; key++) {
+      sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+  }
+  return sorted;
+}
 
 // router.post("/sendsmsbytwillo", function(req, res) {
 //   const FROM_NUMBER = '+19362364789';
@@ -442,6 +586,8 @@ router.get('/cancel', async(req, res) => res.status(400).json({success: false, m
 //         console.log(error)
 //       });
 // })
+
+
 
 module.exports = router;
 

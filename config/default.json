@@ -1,4 +1,9 @@
 {
   "mongoURI":
-  "mongodb+srv://payment:online-payment@onlinepayment.1z1st.mongodb.net/OnlPay?retryWrites=true&w=majority"
+  "mongodb+srv://payment:online-payment@onlinepayment.1z1st.mongodb.net/OnlPay?retryWrites=true&w=majority",
+
+  "vnp_TmnCode":"7OD2WQ9O",
+  "vnp_HashSecret":"BTSGFRTDHRFFYIAAZZKYYSWIWZSVWJWC",
+  "vnp_Url":"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+  "vnp_ReturnUrl": "https://onlpay-test.herokuapp.com/vnpay_return"
 }
