@@ -489,7 +489,7 @@ router.post('/create_payment_url', function (req, res, next) {
   vnp_Params['vnp_SecureHash'] = signed;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
-  res.redirect(vnpUrl)
+  return res.redirect(vnpUrl)
 });
 
 router.get('/vnpay_return', function (req, res, next) {
@@ -503,9 +503,9 @@ router.get('/vnpay_return', function (req, res, next) {
 
   vnp_Params = sortObject(vnp_Params);
 
-  var config = require('config');
-  var tmnCode = config.get('vnp_TmnCode');
-  var secretKey = config.get('vnp_HashSecret');
+  // var config = require('config');
+  // var tmnCode = config.get('vnp_TmnCode');
+  // var secretKey = config.get('vnp_HashSecret');
 
   var querystring = require('qs');
   var signData = querystring.stringify(vnp_Params, { encode: false });
@@ -529,13 +529,13 @@ router.get('/vnpay_ipn', function (req, res, next) {
   delete vnp_Params['vnp_SecureHashType'];
 
   vnp_Params = sortObject(vnp_Params);
-  var config = require('config');
-  var secretKey = config.get('vnp_HashSecret');
+  // var config = require('config');
+  // var secretKey = config.get('vnp_HashSecret');
   var querystring = require('qs');
   var signData = querystring.stringify(vnp_Params, { encode: false });
   var crypto = require("crypto");     
   var hmac = crypto.createHmac("sha512", secretKey);
-  var signed = hmac.update(new Buffer.alloc(signData, 'utf-8')).digest("hex");     
+  var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex");     
    
 
   if(secureHash === signed){
