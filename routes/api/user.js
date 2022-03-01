@@ -14,8 +14,6 @@ const ListAcc = require('../../models/listacc');
 const Trans = require('../../models/trans');
 const ListTrans = require('../../models/listtrans');
 
-
-
 const paypal = require('paypal-rest-sdk');
 
 paypal.configure({
@@ -434,6 +432,8 @@ router.get('/create_payment_url', function (req, res, next) {
   res.status(200).json({title: 'Tạo mới đơn hàng', amount: 10000, description: desc})
 });
 
+
+
 router.post('/create_payment_url', function (req, res, next) {
   var ipAddr = req.headers['x-forwarded-for'] ||
     req.socket.remoteAddress||
@@ -565,6 +565,8 @@ str.sort();
   }
   return sorted;
 }
+
+
 
 // router.post("/sendsmsbytwillo", function(req, res) {
 //   const FROM_NUMBER = '+19362364789';

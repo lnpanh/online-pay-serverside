@@ -8,6 +8,8 @@ var cors = require('cors');
 // routes
 const user = require('./routes/api/user');
 
+var favicon = require('serve-favicon');
+
 const app = express();
 
 // Connect Database
@@ -22,9 +24,11 @@ app.use(express.json());
 // use Routes
 
 app.use('/', user);
+
+
 // app.get('/', (req, res) => res.sendFile(__dirname + "/index.html"));
 
-// app.use(favicon(path.join(__dirname, 'favicon.ico')));
+app.use(favicon('https://onlpay-test.herokuapp.com/favicon.ico'));
 //use nexmo
 
 const port = process.env.PORT || 8082;
