@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 const router = express.Router();
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
-
+const nodemailer = require('nodemailer');
 
 const User = require('../../models/user');
 const Acc = require('../../models/acc');
@@ -585,7 +585,60 @@ str.sort();
 //       });
 // })
 
+ 
+//----------------------email sender---------------------------
+const makeVerifyCode = (length) =>{
+  let result = '';
+  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let charactersLength = characters.length;
+  for ( let i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+router.post("/email-verification", async(req, res) => {
+      const {receiver} = req.body
+      if (!receiver)
+        return res.status(400).json({success: false, message: "Missing fields"})
 
+      const subject = "HCMUS Email Verification Service";
+      const code =  makeVerifyCode(6);
+      const content = "Your verification code is: " + code; 
+      //console.log("Verification code: ",content)
+      try {
+        //console.log("Test transporter host");
+        let transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true, // use SSL
+          auth: {
+            user: process.env.TEMP_USERNAME,
+            pass: process.env.TEMP_PASSWORD,
+          }
+        });
+        
+        // send mail with defined transport object
+        let info = await transporter.sendMail({
+          from: process.env.TEMP_USERNAME, // sender address
+          to: receiver, // list of receivers
+          subject: subject, // Subject line
+          text: content, // plain text body
+        });
+  
+        //console.log("Message sent: %s", info.messageId);
+        //console.log("Info", info);
+        if(info.accepted){
+          res.status(200).json({success: true, message: "Email attempt: Successfully"});
+        }
+        else{
+          res.status(400).json({success: false, message: "Email attempt: Failed"});
+        } 
+      }
+      catch(error){
+      console.log(error)
+      res.status(500).json({success: false, message: "Server Error Occurred with Nodemailer Service :<"});
+    }
+});
 
 module.exports = router;
 
