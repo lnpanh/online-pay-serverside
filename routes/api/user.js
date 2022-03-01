@@ -32,7 +32,7 @@ var tmnCode = config['vnp_TmnCode'];
 var secretKey = config['vnp_HashSecret'];
 var vnpUrl = config['vnp_Url'];
 var returnUrl = config['vnp_ReturnUrl'];
-
+console.log(vnpUrl)
 // const Nexmo = require('nexmo')
 // const nexmo = new Nexmo({
 //   apiKey: "9ea4f114",
@@ -430,12 +430,12 @@ router.get('/paypalsuccess/:accessToken', async(req, res) => {
 router.get('/cancel', async(req, res) => res.status(400).json({success: false, message: "false"}));
 
 
-router.get('/create_payment_url', function (req, res, next) {
-  var date = new Date();
-  var createDate = date.format('yyyy-mm-dd HH:mm:ss')
-  var desc = 'Thanh toan don hang thoi gian: ' + createDate;
-  res.status(200).json({title: 'Tạo mới đơn hàng', amount: 10000, description: desc})
-});
+// router.get('/create_payment_url', function (req, res, next) {
+//   var date = new Date();
+//   var createDate = date.format('yyyy-mm-dd HH:mm:ss')
+//   var desc = 'Thanh toan don hang thoi gian: ' + createDate;
+//   res.status(200).json({title: 'Tạo mới đơn hàng', amount: 10000, description: desc})
+// });
 
 router.post('/create_payment_url', function (req, res, next) {
   var ipAddr = req.headers['x-forwarded-for'] ||
@@ -487,7 +487,6 @@ router.post('/create_payment_url', function (req, res, next) {
   // var signed = hmac.update(new Buffer.alloc(signData.length, 'utf-8')).digest("hex"); 
   var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex"); 
   vnp_Params['vnp_SecureHash'] = signed;
-  var vnpUrl = ''
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
   res.redirect(vnpUrl)
