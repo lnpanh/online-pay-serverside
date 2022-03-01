@@ -28,11 +28,8 @@ const config = require('../../config/default.json');
 var dateFormat = require('x-date');
 
 var $ = require('jquery');
-var tmnCode = config['vnp_TmnCode'];
-var secretKey = config['vnp_HashSecret'];
-var vnpUrl = config['vnp_Url'];
-var returnUrl = config['vnp_ReturnUrl'];
-console.log(vnpUrl)
+
+// console.log(vnpUrl)
 // const Nexmo = require('nexmo')
 // const nexmo = new Nexmo({
 //   apiKey: "9ea4f114",
@@ -446,6 +443,10 @@ router.post('/create_payment_url', function (req, res, next) {
   if (ipAddr.substr(0, 7) == "::ffff:") {
     ipAddr = ipAddr.substr(7)}
 
+  var tmnCode = config['vnp_TmnCode'];
+  var secretKey = config['vnp_HashSecret'];
+  var vnpUrl = config['vnp_Url'];
+  var returnUrl = config['vnp_ReturnUrl'];
   var date = new Date();
   var createDate = date.format('yyyymmddHHmmss');
   var orderId = date.format('HHmmss');
@@ -488,7 +489,6 @@ router.post('/create_payment_url', function (req, res, next) {
   var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex"); 
   vnp_Params['vnp_SecureHash'] = signed;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
-
   res.redirect(vnpUrl)
 });
 
@@ -500,6 +500,11 @@ router.get('/vnpay_return', function (req, res, next) {
 
   delete vnp_Params['vnp_SecureHash'];
   delete vnp_Params['vnp_SecureHashType'];
+
+  var tmnCode = config['vnp_TmnCode'];
+  var secretKey = config['vnp_HashSecret'];
+  var vnpUrl = config['vnp_Url'];
+  var returnUrl = config['vnp_ReturnUrl'];
 
   vnp_Params = sortObject(vnp_Params);
 
