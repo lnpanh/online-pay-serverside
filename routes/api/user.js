@@ -427,12 +427,12 @@ router.get('/paypalsuccess/:accessToken', async(req, res) => {
 router.get('/cancel', async(req, res) => res.status(400).json({success: false, message: "false"}));
 
 
-// router.get('/create_payment_url', function (req, res, next) {
-//   var date = new Date();
-//   var createDate = date.format('yyyy-mm-dd HH:mm:ss')
-//   var desc = 'Thanh toan don hang thoi gian: ' + createDate;
-//   res.status(200).json({title: 'Tạo mới đơn hàng', amount: 10000, description: desc})
-// });
+router.get('/create_payment_url', function (req, res, next) {
+  var date = new Date();
+  var createDate = date.format('yyyy-mm-dd HH:mm:ss')
+  var desc = 'Thanh toan don hang thoi gian: ' + createDate;
+  res.status(200).json({title: 'Tạo mới đơn hàng', amount: 10000, description: desc})
+});
 
 router.post('/create_payment_url', function (req, res, next) {
   var ipAddr = req.headers['x-forwarded-for'] ||
@@ -440,8 +440,8 @@ router.post('/create_payment_url', function (req, res, next) {
       req.remoteAddress ||
       req.socket.remoteAddress;
 
-  if (ipAddr.substr(0, 7) == "::ffff:") {
-    ipAddr = ipAddr.substr(7)}
+  // if (ipAddr.substr(0, 7) == "::ffff:") {
+  //   ipAddr = ipAddr.substr(7)}
 
   var tmnCode = config['vnp_TmnCode'];
   var secretKey = config['vnp_HashSecret'];
