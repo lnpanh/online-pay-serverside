@@ -3,6 +3,8 @@
 const express = require('express');
 const connectDB = require('./config/db');
 var cors = require('cors');
+// var favicon = require('serve-favicon');
+// var path = require('path');
 // routes
 const user = require('./routes/api/user');
 
@@ -22,7 +24,7 @@ app.use(express.json());
 app.use('/', user);
 // app.get('/', (req, res) => res.sendFile(__dirname + "/index.html"));
 
-
+// app.use(favicon(path.join(__dirname, 'favicon.ico')));
 //use nexmo
 
 const port = process.env.PORT || 8082;

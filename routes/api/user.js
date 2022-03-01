@@ -487,9 +487,10 @@ router.post('/create_payment_url', function (req, res, next) {
   // var signed = hmac.update(new Buffer.alloc(signData.length, 'utf-8')).digest("hex"); 
   var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex"); 
   vnp_Params['vnp_SecureHash'] = signed;
+  var vnpUrl = ''
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
-  return res.redirect(vnpUrl)
+  res.redirect(vnpUrl)
 });
 
 router.get('/vnpay_return', function (req, res, next) {
@@ -503,10 +504,6 @@ router.get('/vnpay_return', function (req, res, next) {
 
   vnp_Params = sortObject(vnp_Params);
 
-  // var config = require('config');
-  // var tmnCode = config.get('vnp_TmnCode');
-  // var secretKey = config.get('vnp_HashSecret');
-
   var querystring = require('qs');
   var signData = querystring.stringify(vnp_Params, { encode: false });
   var crypto = require("crypto");     
@@ -515,9 +512,9 @@ router.get('/vnpay_return', function (req, res, next) {
 
   if(secureHash === signed){
       //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
-      return res.status(200).json('success', {code: vnp_Params['vnp_ResponseCode']})
+      res.status(200).json('success', {code: vnp_Params['vnp_ResponseCode']})
   } else{
-      return res.status(400).json('fail', {code: '97'})
+      res.status(400).json('fail', {code: '97'})
   }
 });
 
