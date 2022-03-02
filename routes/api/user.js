@@ -469,7 +469,7 @@ router.post('/create_payment_url', function (req, res, next) {
   vnp_Params['vnp_TxnRef'] = orderId;
   vnp_Params['vnp_OrderInfo'] = orderInfo;
   vnp_Params['vnp_OrderType'] = orderType;
-  vnp_Params['vnp_Amount'] = amount * 100;
+  vnp_Params['vnp_Amount'] = amount ;
   vnp_Params['vnp_ReturnUrl'] = returnUrl;
   vnp_Params['vnp_IpAddr'] = ipAddr;
   vnp_Params['vnp_CreateDate'] = createDate;
@@ -483,7 +483,7 @@ router.post('/create_payment_url', function (req, res, next) {
   var signData = querystring.stringify(vnp_Params, { encode: false });
   var crypto = require("crypto");     
   var hmac = crypto.createHmac("sha512", secretKey);
-  // var signed = hmac.update(new Buffer.alloc(signData.length, 'utf-8')).digest("hex"); 
+
   var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex"); 
   vnp_Params['vnp_SecureHash'] = signed;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
