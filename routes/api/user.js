@@ -469,7 +469,7 @@ router.post('/create_payment_url', function (req, res, next) {
   vnp_Params['vnp_TxnRef'] = orderId;
   vnp_Params['vnp_OrderInfo'] = orderInfo;
   vnp_Params['vnp_OrderType'] = orderType;
-  vnp_Params['vnp_Amount'] = amount ;
+  vnp_Params['vnp_Amount'] = amount * 100;
   vnp_Params['vnp_ReturnUrl'] = returnUrl;
   vnp_Params['vnp_IpAddr'] = ipAddr;
   vnp_Params['vnp_CreateDate'] = createDate;
