@@ -350,8 +350,8 @@ router.post('/paypal/:accessToken', async(req, res) => {
         "payment_method": "paypal"
     },
     "redirect_urls": {
-        "return_url": "http://localhost:8082/paypalsuccess/" + req.params.accessToken,
-        "cancel_url": "http://localhost:8082/cancel/" + req.params.accessToken
+        "return_url": "https://onlpay-test.herokuapp.com/paypalsuccess/" + req.params.accessToken,
+        "cancel_url": "https://onlpay-test.herokuapp.com/cancel/" + req.params.accessToken
     },
     "transactions": [{
         "item_list": {
@@ -416,8 +416,8 @@ router.get('/paypalsuccess/:accessToken', async(req, res) => {
         const total_money = payment["transactions"][0]["amount"]["total"]
         const d = payment["update_time"]
 
-        res.redirect(308, "http://localhost:8082/transaction/" + req.params.accessToken + "?type=payviapaypal?rcv_user=" + rcv_user + "&total_money=" + total_money + "&date=" + d)
-        // return res.status(200).json({success: true, message: "Paid"});
+        // res.redirect(308, "https://onlpay-test.herokuapp.com/transaction/" + req.params.accessToken + "?type=payviapaypal?rcv_user=" + rcv_user + "&total_money=" + total_money + "&date=" + d)
+        return res.status(200).json({success: true, message: "Paid"});
     }
 });
 });
