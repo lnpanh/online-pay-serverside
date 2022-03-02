@@ -514,9 +514,12 @@ router.get('/vnpay_return', function (req, res, next) {
 
   if(secureHash === signed){
       //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
-      res.status(200).json('success', {code: vnp_Params['vnp_ResponseCode']})
+      // res.status(200).json('success', {code: vnp_Params['vnp_ResponseCode']})
+      return res.status(200).json({success: true, message: "Paid"});
   } else{
-      res.status(400).json('fail', {code: '97'})
+      // res.status(400).json('fail', {code: '97'})
+      return res.status(400).json({success: false, message: "Checksum has error"});
+
   }
 });
 
