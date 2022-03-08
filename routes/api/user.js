@@ -491,7 +491,6 @@ router.post('/create_payment_url', function (req, res, next) {
 });
 
 router.get('/vnpay_return', function (req, res, next) {
-  console.log("hello")
   var vnp_Params = req.query;
 
   var secureHash = vnp_Params['vnp_SecureHash'];
@@ -513,11 +512,8 @@ router.get('/vnpay_return', function (req, res, next) {
   var signed = hmac.update(new Buffer.from(signData, 'utf-8')).digest("hex");     
 
   if(secureHash === signed){
-      //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
-      // res.status(200).json('success', {code: vnp_Params['vnp_ResponseCode']})
       return res.status(200).json({success: true, message: "Paid"});
   } else{
-      // res.status(400).json('fail', {code: '97'})
       return res.status(400).json({success: false, message: "Checksum has error"});
 
   }
@@ -566,6 +562,152 @@ str.sort();
   }
   return sorted;
 }
+
+
+//return zalopay
+const config_return_zalopay = {
+  key2: "Iyz2habzyr7AG8SgvoBCbKwKi3UzlLi3"
+};
+
+router.get('/redirect-from-zalopay', (req, res) => {
+  let data = req.query;
+  let checksumData = data.appid + '|' + data.apptransid + '|' + data.pmcid + '|' + data.bankcode + '|' + data.amount + '|' + data.discountamount + '|' + data.status;
+  let checksum = CryptoJS.HmacSHA256(checksumData, config_return_zalopay.key2).toString();
+
+  if (checksum != data.checksum) {
+    res.status(400).json({success: true, message: "Paid"});
+  } else {
+    // kiểm tra xem đã nhận được callback hay chưa, nếu chưa thì tiến hành gọi API truy vấn trạng thái thanh toán của đơn hàng để lấy kết quả cuối cùng
+    res.status(200).json({success: fail, message: "CallBack has problem"});
+  }
+});
+
+
+// https://docs.zalopay.vn/v2/general/overview.html#tao-don-hang
+
+// Node v10.15.3
+const axios = require('axios').default; // npm install axios
+const CryptoJS = require('crypto-js'); // npm install crypto-js
+const moment = require('moment'); // npm install moment
+
+
+//create zalopay url
+
+const config_zalopay_create = {
+    app_id: "2553",
+    key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
+    key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
+    endpoint: "https://sb-openapi.zalopay.vn/v2/create"
+};
+
+const embed_data = {};
+
+const items = [{}];
+const transID = Math.floor(Math.random() * 1000000);
+const order = {
+    app_id: config_zalopay_create.app_id,
+    app_trans_id: `${moment().format('YYMMDD')}_${transID}`, // translation missing: vi.docs.shared.sample_code.comments.app_trans_id
+    
+    app_user: "user123",
+    app_time: Date.now(), // miliseconds
+    item: JSON.stringify(items),
+    embed_data: JSON.stringify(embed_data),
+    amount: 50000,
+    description: `Lazada - Payment for the order #${transID}`,
+    bank_code: "CC",
+};
+console.log("app_transId",order.app_trans_id );
+// appid|app_trans_id|appuser|amount|apptime|embeddata|item
+const data = config_zalopay_create.app_id + "|" + order.app_trans_id + "|" + order.app_user + "|" + order.amount + "|" + order.app_time + "|" + order.embed_data + "|" + order.item;
+order.mac = CryptoJS.HmacSHA256(data, config_zalopay_create.key1).toString();
+console.log("mac", order.mac)
+axios.post(config_zalopay_create.endpoint, null, { params: order })
+    .then(res => {
+        console.log(res.data);
+        
+    })
+    .catch(err => console.log(err));
+
+
+//get list bank
+// const config_zalopay = {
+//   appid: "2553",
+//   key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
+//   key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
+//   endpoint: "https://sbgateway.zalopay.vn/api/getlistmerchantbanks"
+// };
+
+// let reqtime = Date.now();
+// let params = {
+//   appid: config_zalopay.appid,
+//   reqtime: reqtime, // miliseconds
+//   mac: CryptoJS.HmacSHA256(config_zalopay.appid + "|" + reqtime, config_zalopay.key1).toString() // appid|reqtime
+// };
+// console.log("mac", params.mac)
+// axios.get(config_zalopay.endpoint, { params })
+//   .then(res => {
+//     let banks = res.data.banks;
+//     for (let id in banks) {
+//       let banklist = banks[id];
+//       console.log(id + ".");
+//       for (let bank of banklist) {
+//         console.log(bank);
+//       }
+//     }
+//   })
+//   .catch(err => console.error(err));
+
+
+
+//call back
+const config_callback = {
+  key2: "eG4r0GcoNtRGbO8"
+};
+
+router.post('/callback', (req, res) => {
+  let result = {};
+
+  try {
+    let dataStr = req.body.data;
+    let reqMac = req.body.mac;
+
+    let mac = CryptoJS.HmacSHA256(dataStr, config_callback.key2).toString();
+    console.log("mac =", mac);
+
+
+    // kiểm tra callback hợp lệ (đến từ ZaloPay server)
+    if (reqMac !== mac) {
+      // callback không hợp lệ
+      result.return_code = -1;
+      result.return_message = "mac not equal";
+    }
+    else {
+      // thanh toán thành công
+      // merchant cập nhật trạng thái cho đơn hàng
+      let dataJson = JSON.parse(dataStr, config.key2);
+      console.log("update order's status = success where app_trans_id =", dataJson["app_trans_id"]);
+
+      result.return_code = 1;
+      result.return_message = "success";
+    }
+  } catch (ex) {
+    result.return_code = 0; // ZaloPay server sẽ callback lại (tối đa 3 lần)
+    result.return_message = ex.message;
+  }
+
+  // thông báo kết quả cho ZaloPay server
+  res.json(result);
+});
+
+
+
+
+
+
+// Node v10.15.3
+// const CryptoJS = require('crypto-js');
+// const express = require('express');
+// const app = express();
 
 
 
