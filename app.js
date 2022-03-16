@@ -17,7 +17,7 @@ app.disable('x-powered-by')
 connectDB();
 
 // cors
-app.use(cors({ origin: true, credentials: true, allowedHeaders:['Context-Type','Authorization'] }));
+app.use(cors({ origin: true, credentials: true }));
 
 // Init Middleware
 app.use(express.json());
