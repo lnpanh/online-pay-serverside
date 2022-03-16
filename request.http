@@ -40,13 +40,13 @@
 # GET http://localhost:8082/getHistory/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDMxODk3MDh9.rC07Ccxxakc7pc6YK_ij5tSYDa9aH_HwtzI-cP6szFs
 
 
-# POST http://localhost:8082/signin
-# Content-Type: application/json
+POST http://localhost:8082/signin
+Content-Type: application/json
 
-# {
-#     "password" : "transfer",
-#     "phone": "0939807294"
-# }
+{
+    "password" : "transfer",
+    "phone": "0939807294"
+}
 
-POST  http://localhost:8082/welcome/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDc0MTU1NzksImV4cCI6MTY0NzQxNTYyNH0.NGLzWetZ8MNei78Su1rncTvHc-7PcdRFd6rXcj0c1ek
+# POST  http://localhost:8082/welcome/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDc0MTU1NzksImV4cCI6MTY0NzQxNTYyNH0.NGLzWetZ8MNei78Su1rncTvHc-7PcdRFd6rXcj0c1ek
 
