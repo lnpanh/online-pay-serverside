@@ -36,6 +36,8 @@ var $ = require('jquery');
 //   apiSecret: "hL2iD1UQstu8vmzU"
 // })
 
+// Time expired: https://www.sohamkamani.com/nodejs/jwt-authentication/
+
 router.post('/register', async(req, res) => {
   const {name,phone,password, email, dob} = req.body
 // front checked already
@@ -60,9 +62,8 @@ router.post('/register', async(req, res) => {
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
       algorithm: process.env.algorithm, 
       expiresIn: process.env.jwtExpireTime})
-    res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000 })
-    res.status(200).json({success: true, message: "Register Successfully"})
-    res.end()
+    res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000, withCredentials: true, httpOnly: true })
+    res.status(200).json({success: true, message: "Register Successfully"}).end()
 
   }catch(error){
     console.log(error)
@@ -87,14 +88,13 @@ router.post('/signin', async(req, res) => {
       // const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN)
 
       const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
-        expiresIn: process.env.jwtExpireTime})
+        expiresIn: process.env.jwtExpireTime * 1000})
       
-      res.cookie("accessToken",accessToken, { maxAge: process.env.jwtExpireTime * 1000 })
-      res.status(200).json({success: true, message: "LogIn Successfully"})
-      res.end()
+      res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000, withCredentials: true, httpOnly: true })
+      res.status(200).json({success: true, message: "LogIn Successfully"}).end()
       }
       else 
-        res.status(401).json({success: cur_user, message: "Wrong password"})
+        res.status(401).json({success: false, message: "Wrong password"})
 
     }
     else
@@ -107,31 +107,41 @@ router.post('/signin', async(req, res) => {
   }
 })
 
-
-
-router.post('/welcome', async(req, res) => {
-  const accessToken = req.cookies.accessToken
-  // const accessToken = req.params.accessToken
+router.post('/welcome/:accessToken', async(req, res) => {
+  // const accessToken = req.cookies.accessToken
+  const accessToken = req.params.accessToken
 
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
   }
-
-  // var payload = jwt.decode(accessToken, process.env.ACCESS_TOKEN)['exp']
-  const isTokenExpired = (accessToken) => (Date.now() >= JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64').toString()).exp * 1000)
-  
-  if (isTokenExpired){
-    var payload = jwt.decode(accessToken, process.env.ACCESS_TOKEN)['userId']
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userId = payload['userId']
+    console.log(userId)
   }
   else{
+    // console.log(isTokenExpired(accessToken))
     return res.status(401).json({success: false, message: "Token is expired"}).end()
   }
-
-  console.log(payload)
-
 })
 
+
 router.post('/linkAcc/:accessToken', async(req, res) => {
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
+
   const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   if (cur_user["acc_id"]) 
@@ -162,6 +172,20 @@ router.post('/linkAcc/:accessToken', async(req, res) => {
 })
 
 router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
   const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   if (cur_user == null)
@@ -194,6 +218,20 @@ router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
 })
 
 router.post('/transaction/:accessToken', async(req, res) => {
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
   const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   
@@ -295,10 +333,24 @@ router.post('/transaction/:accessToken', async(req, res) => {
       return res.status(200).json({success: true, message: "Payment successfully"})
     }  
   }
-  });
+})
 
 
 router.get('/getHistory/:accessToken', async(req, res) => {
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
   const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   const list_trans = await ListTrans.findOne({_id: mongoose.Types.ObjectId(cur_user["hist_id"])})
@@ -373,6 +425,20 @@ function encode(account)
 
 
 router.post("/getInfor/:accessToken", async(req, res)=>{
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
   const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   return res.status(200).json({success: true, message: "Get information successfully",data: cur_user})
@@ -381,6 +447,20 @@ router.post("/getInfor/:accessToken", async(req, res)=>{
 
 router.post('/paypal/:accessToken', async(req, res) => {
   // const host = req.get('host');
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
   const create_payment_json = {
     "intent": "sale",
     "payer": {
@@ -388,7 +468,7 @@ router.post('/paypal/:accessToken', async(req, res) => {
     },
     "redirect_urls": {
         "return_url": "https://onlpay-test.herokuapp.com/paypalsuccess/" + req.params.accessToken,
-        "cancel_url": "https://onlpay-test.herokuapp.com/cancel/" + req.params.accessToken
+        "cancel_url": "https://onlpay-test.herokuapp.com/cancel/"
     },
     "transactions": [{
         "item_list": {
@@ -424,8 +504,22 @@ paypal.payment.create(create_payment_json, function (error, payment) {
 
 
 router.get('/paypalsuccess/:accessToken', async(req, res) => {
+
   // const userID = jwt.decode(req.params.accessToken)["userId"]
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userId = payload['userId']
+  //   console.log(userId)
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
 
   const payerId = req.query.PayerID;
   const paymentId = req.query.paymentId;

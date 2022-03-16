@@ -11,6 +11,7 @@ const user = require('./routes/api/user');
 // var favicon = require('serve-favicon');
 
 const app = express();
+app.disable('x-powered-by')
 
 // Connect Database
 connectDB();
