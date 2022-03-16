@@ -89,7 +89,7 @@ router.post('/signin', async(req, res) => {
       const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
         expiresIn: process.env.jwtExpireTime * 1000})
       
-      res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000, withCredentials: true, httpOnly: true, secure: true })
+      res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000, withCredentials: true, httpOnly: true})
       res.status(200).json({success: true, message: "LogIn Successfully"}).end()
       }
       else 
