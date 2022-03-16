@@ -6,6 +6,8 @@ const router = express.Router();
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer');
+const bodyParser = require('body-parser')
+const cookieParser = require('cookie-parser')
 
 const User = require('../../models/user');
 const Acc = require('../../models/acc');
@@ -36,7 +38,7 @@ var $ = require('jquery');
 
 router.post('/register', async(req, res) => {
   const {name,phone,password, email, dob} = req.body
-
+// front checked already
   if (!name || !phone || !password || !email || !dob)
   return res.status(400).json({success: false, message: "Missing fields"})
 
@@ -53,10 +55,14 @@ router.post('/register', async(req, res) => {
     await newUser.save()
 
     //return token
-    const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN)
+    // const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN)
 
-    res.status(200).json({success: true, message: "Register Successfully", accessToken})
-
+    const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
+      algorithm: process.env.algorithm, 
+      expiresIn: process.env.jwtExpireTime})
+    res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000 })
+    res.status(200).json({success: true, message: "Register Successfully"})
+    res.end()
 
   }catch(error){
     console.log(error)
@@ -77,8 +83,15 @@ router.post('/signin', async(req, res) => {
     {
       if(await argon2.verify(cur_user["password"], req.body.password) )
       {
-      const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN)
-      res.status(200).json({success: true, message: "LogIn Successfully", accessToken})
+      
+      // const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN)
+
+      const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
+        expiresIn: process.env.jwtExpireTime})
+      
+      res.cookie("accessToken",accessToken, { maxAge: process.env.jwtExpireTime * 1000 })
+      res.status(200).json({success: true, message: "LogIn Successfully"})
+      res.end()
       }
       else 
         res.status(401).json({success: cur_user, message: "Wrong password"})
@@ -86,12 +99,36 @@ router.post('/signin', async(req, res) => {
     }
     else
     {
-      res.status(401).json({success: false, message: "Unauthorized phone number"})
+      res.status(403).json({success: false, message: "Unauthorized phone number"})
     }
   }catch(error){
     console.log(error)
     res.status(500).json({success: false, message: "Server Error"})
   }
+})
+
+
+
+router.post('/welcome', async(req, res) => {
+  const accessToken = req.cookies.accessToken
+  // const accessToken = req.params.accessToken
+
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+
+  // var payload = jwt.decode(accessToken, process.env.ACCESS_TOKEN)['exp']
+  const isTokenExpired = (accessToken) => (Date.now() >= JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64').toString()).exp * 1000)
+  
+  if (isTokenExpired){
+    var payload = jwt.decode(accessToken, process.env.ACCESS_TOKEN)['userId']
+  }
+  else{
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
+
+  console.log(payload)
+
 })
 
 router.post('/linkAcc/:accessToken', async(req, res) => {

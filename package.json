@@ -33,7 +33,7 @@
     "express": "^4.17.2",
     "firebase": "^9.6.6",
     "firebaseui": "^6.0.0",
-    "jade": "^1.11.0",
+    "jade": "^0.31.2",
     "jquery": "^3.6.0",
     "jsonwebtoken": "^8.5.1",
     "md5": "^2.3.0",
