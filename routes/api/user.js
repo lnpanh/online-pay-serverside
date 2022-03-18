@@ -409,7 +409,7 @@ function encode(account)
 }
 
 
-router.post('/getInfor', async(req, res)=>{
+router.get('/getInfor', async(req, res)=>{
 
   const accessToken = req.cookies.accessToken
   if (!accessToken) {
