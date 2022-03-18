@@ -40,7 +40,7 @@
 # GET http://localhost:8082/getHistory/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDMxODk3MDh9.rC07Ccxxakc7pc6YK_ij5tSYDa9aH_HwtzI-cP6szFs
 
 
-# POST http://localhost:8082/signin
+# POST https://onlpay-test.herokuapp.com/signin
 # Content-Type: application/json
 
 # {
@@ -48,5 +48,5 @@
 #     "phone": "0939807294"
 # }
 
-POST  http://localhost:8082/welcome/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDc0NzMwMTMsImV4cCI6MTY0NzUxODAxM30.MUcdL90L7vXjTurc4y8yfszSpYFxVmnnjT_YaKb-zqA
+POST  https://onlpay-test.herokuapp.com/welcome
 
