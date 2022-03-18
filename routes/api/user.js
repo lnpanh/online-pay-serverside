@@ -9,6 +9,8 @@ const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 
+router.use(cookieParser());
+
 const User = require('../../models/user');
 const Acc = require('../../models/acc');
 const ListAcc = require('../../models/listacc');
