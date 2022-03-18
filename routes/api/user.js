@@ -58,12 +58,9 @@ router.post('/register', async(req, res) => {
     const newUser = new User({name, phone, password: hashPassword, email, dob})
     await newUser.save()
 
-    //return token
-    // const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN)
-
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
-      expiresIn: process.env.jwtExpireTime * 1000})
-    res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
+      expiresIn: process.env.TIME_EXPIRED * 1000})
+    res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
     res.status(200).json({success: true, message: "Register Successfully"}).end()
 
   }catch(error){
@@ -85,18 +82,14 @@ router.post('/signin', async(req, res) => {
     {
       if(await argon2.verify(cur_user["password"], req.body.password) )
       {
-      
-      // const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN)
-
       const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
-        expiresIn: process.env.jwtExpireTime * 1000})
+        expiresIn: process.env.TIME_EXPIRED * 1000})
       
-      res.cookie("accessToken", accessToken, { maxAge: process.env.jwtExpireTime * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
+      res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
       res.status(200).json({success: true, message: "LogIn Successfully"}).end()
       }
       else 
         res.status(401).json({success: false, message: "Wrong password"})
-
     }
     else
     {
@@ -123,33 +116,28 @@ router.get('/welcome', async(req, res) => {
     return res.status(200).json({success: true, message: "Welcome"}).end()
   }
   else{
-    // console.log(isTokenExpired(accessToken))
     return res.status(401).json({success: false, message: "Token is expired"}).end()
   }
 })
 
 
-router.post('/linkAcc/:accessToken', async(req, res) => {
+router.post('/linkAcc', async(req, res) => {
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
-
-  const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   if (cur_user["acc_id"]) 
-  {
-    
+  { 
     const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}})
 
     if (cur_linkAcc.length != 0) 
@@ -171,25 +159,23 @@ router.post('/linkAcc/:accessToken', async(req, res) => {
     await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
     res.status(200).json({success: true, message: "Link Account successfully"})
   }
-  
+
 })
 
-router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
+router.get('/getListAcc/:linkType', async(req, res) => {
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
-  const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   if (cur_user == null)
   {
@@ -220,22 +206,20 @@ router.get('/getListAcc/:accessToken/:linkType', async(req, res) => {
   }
 })
 
-router.post('/transaction/:accessToken', async(req, res) => {
+router.post('/transaction', async(req, res) => {
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
-  const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   
   if (req.body.type == "transfer")
@@ -339,22 +323,20 @@ router.post('/transaction/:accessToken', async(req, res) => {
 })
 
 
-router.get('/getHistory/:accessToken', async(req, res) => {
+router.get('/getHistory', async(req, res) => {
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
-  const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   const list_trans = await ListTrans.findOne({_id: mongoose.Types.ObjectId(cur_user["hist_id"])})
   if (list_trans == null)
@@ -427,42 +409,40 @@ function encode(account)
 }
 
 
-router.post("/getInfor/:accessToken", async(req, res)=>{
+router.post('/getInfor', async(req, res)=>{
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
-  const userID = jwt.decode(req.params.accessToken)["userId"]
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   return res.status(200).json({success: true, message: "Get information successfully",data: cur_user})
 })
 
 
-router.post('/paypal/:accessToken', async(req, res) => {
-  // const host = req.get('host');
+router.post('/paypal', async(req, res) => {
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const host = req.get('host');
+
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
   const create_payment_json = {
     "intent": "sale",
@@ -506,23 +486,21 @@ paypal.payment.create(create_payment_json, function (error, payment) {
 });
 
 
-router.get('/paypalsuccess/:accessToken', async(req, res) => {
+router.get('/paypalsuccess', async(req, res) => {
 
-  // const userID = jwt.decode(req.params.accessToken)["userId"]
-  // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userId = payload['userId']
-  //   console.log(userId)
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
 
   const payerId = req.query.PayerID;
   const paymentId = req.query.paymentId;
