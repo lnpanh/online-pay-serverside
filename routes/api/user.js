@@ -106,9 +106,10 @@ router.post('/signin', async(req, res) => {
   }
 })
 
-router.post('/welcome/:accessToken', async(req, res) => {
-  // const accessToken = req.cookies.accessToken
-  const accessToken = req.params.accessToken
+router.post('/welcome', async(req, res) => {
+  const accessToken = req.cookies.accessToken
+  // const accessToken = req.params.accessToken
+  console.log(accessToken)
 
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
