@@ -106,7 +106,7 @@ router.post('/signin', async(req, res) => {
   }
 })
 
-router.post('/welcome', async(req, res) => {
+router.get('/welcome', async(req, res) => {
   const accessToken = req.cookies.accessToken
   // const accessToken = req.params.accessToken
   console.log(accessToken)
@@ -118,6 +118,7 @@ router.post('/welcome', async(req, res) => {
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
     console.log(userId)
+    return res.status(200).json({success: true, message: "Welcome"}).end()
   }
   else{
     // console.log(isTokenExpired(accessToken))
