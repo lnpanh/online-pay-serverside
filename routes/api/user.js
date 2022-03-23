@@ -156,14 +156,14 @@ router.post('/linkAcc/:accessToken', async(req, res) => {
     if (cur_user["acc_id"]) 
     { 
       const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}})
-
+      
       if (cur_linkAcc.length != 0) 
       {
         await session.abortTransaction()
         session.endSession()
         return res.status(401).json({success: false, message: "Account existed"})
       }
-      elsefind
+      else
       {
         const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
         await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {linkAcc: newAcc}}, {session})
@@ -177,9 +177,7 @@ router.post('/linkAcc/:accessToken', async(req, res) => {
       await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session})
       res.status(200).json({success: true, message: "Link Account successfully"})
     }
-    //demo transaction rollback
-    //await session.commitTransaction()
-    await session.abortTransaction()
+    await session.commitTransaction()
     session.endSession()
   } catch(error) {
     await session.abortTransaction()
