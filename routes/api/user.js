@@ -10,6 +10,7 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 
 router.use(cookieParser());
+// const conn = require('../../models')
 
 const User = require('../../models/user');
 const Acc = require('../../models/acc');
@@ -46,24 +47,33 @@ router.post('/register', async(req, res) => {
   if (!name || !phone || !password || !email || !dob)
   return res.status(400).json({success: false, message: "Missing fields"})
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const phone_user = await User.findOne({phone})
     const email_user = await User.findOne({email})
 
-    if (phone_user || email_user)
-    return res.status(400).json({success: false, message: "Phone or Email existed"})
+    if (phone_user || email_user) {
+      await session.abortTransaction()
+      session.endSession()
+      return res.status(400).json({success: false, message: "Phone or Email existed"})
+    }
 
     // All good
     const hashPassword = await argon2.hash(password)
-    const newUser = new User({name, phone, password: hashPassword, email, dob})
-    await newUser.save()
+    const newUser = await User.create([{name, phone, password: hashPassword, email, dob}], {session})
 
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
       expiresIn: process.env.TIME_EXPIRED * 1000})
     res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
     res.status(200).json({success: true, message: "Register Successfully"}).end()
-
+    
+    await session.commitTransaction()
+    session.endSession()
   }catch(error){
+    await session.abortTransaction()
+    session.endSession()
     console.log(error)
     res.status(500).json({success: false, message: "Server Error"})
   }
@@ -121,43 +131,60 @@ router.get('/welcome', async(req, res) => {
 })
 
 
-router.post('/linkAcc', async(req, res) => {
+router.post('/linkAcc/:accessToken', async(req, res) => {
 
-  const accessToken = req.cookies.accessToken
-  if (!accessToken) {
-    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  }
-  var payload = jwt.decode(accessToken)
-  if (Date.now() < payload['exp'] *1000){
-    var userID = payload['userId']
-  }
-  else {
-    return res.status(401).json({success: false, message: "Token is expired"}).end()
-  }
+  const accessToken = req.params.accessToken
+  const userID = jwt.decode(accessToken)['userId']
+
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userID = payload['userId']
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  if (cur_user["acc_id"]) 
-  { 
-    const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}})
+  try {
+    if (cur_user["acc_id"]) 
+    { 
+      const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}})
 
-    if (cur_linkAcc.length != 0) 
-    {
-      return res.status(401).json({success: false, message: "Account existed"})
+      if (cur_linkAcc.length != 0) 
+      {
+        await session.abortTransaction()
+        session.endSession()
+        return res.status(401).json({success: false, message: "Account existed"})
+      }
+      elsefind
+      {
+        const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
+        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {linkAcc: newAcc}}, {session})
+        res.status(200).json({success: true, message: "Link Account successfully"})
+      }
     }
     else
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
+      const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
+      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session})
       res.status(200).json({success: true, message: "Link Account successfully"})
     }
-  }
-  else
-  {
-    const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-    const newList = new ListAcc({linkAcc: [newAcc]})
-    await newList.save()
-    await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
-    res.status(200).json({success: true, message: "Link Account successfully"})
+    //demo transaction rollback
+    //await session.commitTransaction()
+    await session.abortTransaction()
+    session.endSession()
+  } catch(error) {
+    await session.abortTransaction()
+    session.endSession()
+    return res.status(500).json({success: false, message: "Server error"})
   }
 
 })
@@ -206,99 +233,234 @@ router.get('/getListAcc/:linkType', async(req, res) => {
   }
 })
 
-router.post('/transaction', async(req, res) => {
+function timerMessage() {
+  console.log("Thanks for waiting!");
+}
 
-  const accessToken = req.cookies.accessToken
-  if (!accessToken) {
-    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  }
-  var payload = jwt.decode(accessToken)
-  if (Date.now() < payload['exp'] *1000){
-    var userID = payload['userId']
-  }
-  else {
-    return res.status(401).json({success: false, message: "Token is expired"}).end()
-  }
+// router.post('/transaction/:accessToken', async(req, res) => {
+
+//   const accessToken = req.params.accessToken
+//   const userID = jwt.decode(accessToken)['userId']
+//   // const accessToken = req.cookies.accessToken
+//   // if (!accessToken) {
+//   //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+//   // }
+//   // var payload = jwt.decode(accessToken)
+//   // if (Date.now() < payload['exp'] *1000){
+//   //   var userID = payload['userId']
+//   // }
+//   // else {
+//   //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+//   // }
+
+//   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+  
+//   const session = await conn.startSession();
+//   session.startTransaction();
+  
+//   if (req.body.type == "transfer") {
+//     const rcv_user = await User.findOne({phone: req.body.phone})
+//     if (!rcv_user || cur_user._id.equals(rcv_user._id)) {
+//       return res.status(401).json({success: false, message: "Unauthorized phone number"})
+//     } else {
+//         try {
+//           if (req.body.money < cur_user["balance"]) {
+//             const newTrans_cur = new Trans({name_rcv: req.body.name, phone_rcv: req.body.phone, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+//             const newTrans_rcv = new Trans({name_send: cur_user["name"], phone_send: cur_user["phone"], amount_money: req.body.money, type: "Receive", dt: Date.now()})
+
+//             await cur_user.updateOne({$inc: {balance: -req.body.money}})
+//             await rcv_user.updateOne({$inc: {balance: req.body.money}})
+          
+//             if (cur_user["hist_id"]) {
+//               await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+//               res.status(200).json({success: true, message: "Transfer successfully"})
+//             } else { 
+//               const newList = new ListTrans({TransList: [newTrans_cur]})
+//               await newList.save()
+//               await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
+//               res.status(200).json({success: true, message: "Transfer successfully"})
+//             }            
+//             if(rcv_user["hist_id"]) {
+//               await ListTrans.findOne({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}).updateOne({$push : {TransList: newTrans_rcv}})
+//             } else {
+//               const newList = new ListTrans({TransList: [newTrans_rcv]})
+//               await newList.save()
+//               await User.findOne({_id: mongoose.Types.ObjectId(rcv_user._id)}).updateOne({$set: {hist_id: newList._id}})
+//             }
+//           } else {
+//             await session.abortTransaction()
+//             session.endSession()
+//             return res.status(401).json({success: false, message: "Unauthorized balance"})
+//           }
+//           await session.commitTransaction()
+//           session.endSession()
+//         } catch (error) {
+//         await session.abortTransaction()
+//         session.endSession()
+//         console.log(error);
+//         return res.status(500).json({success: false, message: "Server error"})
+//       }
+//     }
+//   } else if (req.body.type  == "deposit")
+//   {
+//     // const session = await User.startSession();
+//     // session.startTransaction();
+//     // try {
+//       const cur_acc = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])})
+//       var newTrans_cur = new Trans()
+    
+//       cur_acc["linkAcc"].forEach(function(item)
+//       {
+//         if (item._id.equals(req.body._id))
+//         {
+//           newTrans_cur = new Trans({name_3rd_party: item.partiesName, num_3rd_party: encode(item.accNum), amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+//         }  
+//       })
+
+//       await cur_user.updateOne({$inc: {balance: req.body.money}})
+//       if (cur_user["hist_id"]) 
+//       {
+//         await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+//         res.status(200).json({success: true, message: "Deposit successfully"})
+//       }
+//       else
+//       { 
+//         const newList = new ListTrans({TransList: [newTrans_cur]})
+//         await newList.save()
+//         await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
+//         res.status(200).json({success: true, message: "Deposit successfully"})  
+//       }
+//       // await session.commitTransaction()
+//       // session.endSession()
+//     // } catch (error) {
+//     //   await session.abortTransaction()
+//     //   session.endSession()
+//     //   console.log(error);
+//     //   return res.status(500).json({success: false, message: "Server error"}) 
+//     // }
+//   }
+
+//   else if (req.query.type == "payviapaypal")
+//   {
+//     console.log("Hello")
+//     const rcv_user = infor["transactions"][0]["payee"]["email"]
+//     const total_money = infor["transactions"][0]["amount"]["total"]
+//     const d = infor["update_time"]
+
+//     const newTrans_cur = new Trans({name_rcv: rcv_user, amount_money: total_money, type: "payviapaypal", dt: Date(d)})
+
+//     if (cur_user["hist_id"]) 
+//     {
+//       await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
+//       res.status(200).json({success: true, message: "Payment successfully"})
+//     }
+//     else
+//     { 
+//       const newList = new ListTrans({TransList: [newTrans_cur]})
+//       await newList.save()
+//       await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
+//       return res.status(200).json({success: true, message: "Payment successfully"})
+//     }  
+//   }
+// })
+
+router.post('/transaction/:accessToken', async(req, res) => {
+
+  const accessToken = req.params.accessToken
+  const userID = jwt.decode(accessToken)['userId']
+  // const accessToken = req.cookies.accessToken
+  // if (!accessToken) {
+  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  // }
+  // var payload = jwt.decode(accessToken)
+  // if (Date.now() < payload['exp'] *1000){
+  //   var userID = payload['userId']
+  // }
+  // else {
+  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
+  // }
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   
-  if (req.body.type == "transfer")
-  {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  if (req.body.type == "transfer") {
     const rcv_user = await User.findOne({phone: req.body.phone})
-    if (!rcv_user || cur_user._id == rcv_user._id)
-    {
-      res.status(401).json({success: false, message: "Unauthorized phone number"})
-    }
-    else
-    {
-        if (req.body.money < cur_user["balance"])
-        {
-          const newTrans_cur = new Trans({name_rcv: req.body.name, phone_rcv: req.body.phone, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
-          const newTrans_rcv = new Trans({name_send: cur_user["name"], phone_send: cur_user["phone"], amount_money: req.body.money, type: "Receive", dt: Date.now()})
+    if (!rcv_user || cur_user._id.equals(rcv_user._id)) {
+      return res.status(401).json({success: false, message: "Unauthorized phone number"})
+    } else {
+        try {
+          if (req.body.money < cur_user["balance"]) {
+            const newTrans_cur = new Trans({name_rcv: req.body.name, phone_rcv: req.body.phone, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+            const newTrans_rcv = new Trans({name_send: cur_user["name"], phone_send: cur_user["phone"], amount_money: req.body.money, type: "Receive", dt: Date.now()})
 
-          await cur_user.updateOne({$inc: {balance: -req.body.money}})
-          await rcv_user.updateOne({$inc: {balance: req.body.money}})
-
-          if (cur_user["hist_id"]) 
-          {
-            await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
-            res.status(200).json({success: true, message: "Transfer successfully"})
-          }
-          else
-          { 
-            const newList = new ListTrans({TransList: [newTrans_cur]})
-            await newList.save()
-            await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
-            res.status(200).json({success: true, message: "Transfer successfully"})
-          }
-
+            await cur_user.updateOne({$inc: {balance: -req.body.money}}, {session})
+            await rcv_user.updateOne({$inc: {balance: req.body.money}}, {session})
           
-          if(rcv_user["hist_id"])
-          {
-            await ListTrans.findOne({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}).updateOne({$push : {TransList: newTrans_rcv}})
+            if (cur_user["hist_id"]) {
+              await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
+              res.status(200).json({success: true, message: "Transfer successfully"})
+            } else { 
+              const newList = await ListTrans.create([{TransList: [newTrans_cur]}], {session})
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session})
+              res.status(200).json({success: true, message: "Transfer successfully"})
+            }            
+            if(rcv_user["hist_id"]) {
+              await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
+            } else {
+              const newList = await ListTrans.create([{TransList: [newTrans_rcv]}], {session})
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session})
+            }
+          } else {
+            await session.abortTransaction()
+            session.endSession()
+            return res.status(401).json({success: false, message: "Unauthorized balance"})
           }
-          else
-          {
-            const newList = new ListTrans({TransList: [newTrans_rcv]})
-            await newList.save()
-            await User.findOne({_id: mongoose.Types.ObjectId(rcv_user._id)}).updateOne({$set: {hist_id: newList._id}})
-          }
-
-        }
-        else
-        {
-          return res.status(401).json({success: false, message: "Unauthorized balance"})
-        }
-      } 
-  }
-  else if (req.body.type  == "deposit")
+          await session.commitTransaction()
+          session.endSession()
+        } catch (error) {
+        await session.abortTransaction()
+        session.endSession()
+        console.log(error);
+        return res.status(500).json({success: false, message: "Server error"})
+      }
+    }
+  } else if (req.body.type  == "deposit")
   {
-    const cur_acc = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])})
-    var newTrans_cur = new Trans()
-    cur_acc["linkAcc"].forEach(function(item)
-    {
-      if (item._id == req.body._id)
+    try {
+      const cur_acc = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])})
+      var newTrans_cur = new Trans()
+    
+      cur_acc["linkAcc"].forEach(function(item)
       {
-        newTrans_cur = new Trans({name_3rd_party: item.partiesName, num_3rd_party: encode(item.accNum), amount_money: req.body.money, type: req.body.type, dt: Date.now()})
-      }  
-    })
+        if (item._id.equals(req.body._id))
+        {
+          newTrans_cur = new Trans({name_3rd_party: item.partiesName, num_3rd_party: encode(item.accNum), amount_money: req.body.money, type: req.body.type, dt: Date.now()})
+        }  
+      })
 
-    await cur_user.updateOne({$inc: {balance: req.body.money}})
-    if (cur_user["hist_id"]) 
-    {
-      await ListTrans.findOne({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}).updateOne({$push : {TransList: newTrans_cur}})
-      res.status(200).json({success: true, message: "Deposit successfully"})
+      await cur_user.updateOne({$inc: {balance: req.body.money}}, {session})
+      if (cur_user["hist_id"]) 
+      {
+        await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
+        res.status(200).json({success: true, message: "Deposit successfully"})
+      }
+      else
+      { 
+        const newList = await ListTrans.create([{TransList: [newTrans_cur]}], {session})
+        await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session})
+        res.status(200).json({success: true, message: "Deposit successfully"})  
+      }
+      await session.commitTransaction()
+      session.endSession()
+    } catch (error) {
+      await session.abortTransaction()
+      session.endSession()
+      console.log(error);
+      return res.status(500).json({success: false, message: "Server error"}) 
     }
-    else
-    { 
-      const newList = new ListTrans({TransList: [newTrans_cur]})
-      await newList.save()
-      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
-      res.status(200).json({success: true, message: "Deposit successfully"})  
-    }
-  }
-
-  else if (req.query.type == "payviapaypal")
+  }  else if (req.query.type == "payviapaypal")
   {
     console.log("Hello")
     const rcv_user = infor["transactions"][0]["payee"]["email"]
@@ -321,7 +483,6 @@ router.post('/transaction', async(req, res) => {
     }  
   }
 })
-
 
 router.get('/getHistory', async(req, res) => {
 

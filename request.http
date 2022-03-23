@@ -5,24 +5,34 @@
 #     "linkType": "acb"
 # }
 
-# POST http://localhost:8082/linkAcc/61e927660552504308d5b7d5
-# Content-Type: application/json
+POST http://localhost:8082/linkAcc/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDgwMDQ0MjcsImV4cCI6MTY1ODgwNDQyN30.UpfxykIof4uvlA9nUFeBVpIPZdpf6Idhf6nOfI19B3o
+Content-Type: application/json
 
-# {
-#     "accNum" : "121212121212121212155",
-#     "partiesName": "456",
-#     "token": "ABC",
-#     "linkType": "Bank"
-# }
+{
+    "accNum" : "148514851485",
+    "partiesName": "1485",
+    "token": "ABC",
+    "linkType": "Bank"
+}
 
-# POST http://localhost:8082/transaction/61e927660552504308d5b7d5
+# POST http://localhost:8082/transaction/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDc5MzE1NzksImV4cCI6MTY1ODczMTU3OX0.S2JkiPySnQuqEjcZ2sxU2PNaAoxhsODd3FY0-18BOOk
 # Content-Type: application/json
 
 # {
 #     "type" : "transfer",
 #     "name": "Lien",
-#     "phone": "0939807294",
-#     "money": "1000"
+#     "phone": "0939807295",
+#     "money": "800"
+# }
+
+# POST http://localhost:8082/test/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDgwMDEzNjUsImV4cCI6MTY1ODgwMTM2NX0.WGuLofPyPX3T6l2J_jVmT2vVi5GEWCuzJcDPRA8BuIo
+# Content-Type: application/json
+
+# {
+#     "type" : "transfer",
+#     "name": "Lien",
+#     "phone": "0939807295",
+#     "money": "360"
 # }
 
 # POST http://localhost:8082/register
@@ -40,7 +50,7 @@
 # GET http://localhost:8082/getHistory/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWYxMDk4MTJmZjI4MDI5MDZkOTg4OGIiLCJpYXQiOjE2NDMxODk3MDh9.rC07Ccxxakc7pc6YK_ij5tSYDa9aH_HwtzI-cP6szFs
 
 
-# POST https://onlpay-test.herokuapp.com/signin
+# POST http://localhost:8082/signin
 # Content-Type: application/json
 
 # {
@@ -48,5 +58,5 @@
 #     "phone": "0939807294"
 # }
 
-POST  https://onlpay-test.herokuapp.com/welcome
+# POST  https://onlpay-test.herokuapp.com/welcome
 
