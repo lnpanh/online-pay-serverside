@@ -131,22 +131,22 @@ router.get('/welcome', async(req, res) => {
 })
 
 
-router.post('/linkAcc/:accessToken', async(req, res) => {
+router.post('/linkAcc', async(req, res) => {
 
-  const accessToken = req.params.accessToken
-  const userID = jwt.decode(accessToken)['userId']
+  // const accessToken = req.params.accessToken
+  // const userID = jwt.decode(accessToken)['userId']
 
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userID = payload['userId']
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -362,21 +362,22 @@ function timerMessage() {
 //   }
 // })
 
-router.post('/transaction/:accessToken', async(req, res) => {
+router.post('/transaction', async(req, res) => {
 
-  const accessToken = req.params.accessToken
-  const userID = jwt.decode(accessToken)['userId']
-  // const accessToken = req.cookies.accessToken
-  // if (!accessToken) {
-  //   return res.status(401).json({success: false, message: "Unauthorized token"}).end()
-  // }
-  // var payload = jwt.decode(accessToken)
-  // if (Date.now() < payload['exp'] *1000){
-  //   var userID = payload['userId']
-  // }
-  // else {
-  //   return res.status(401).json({success: false, message: "Token is expired"}).end()
-  // }
+  // const accessToken = req.params.accessToken
+  // const userID = jwt.decode(accessToken)['userId']
+  
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   
