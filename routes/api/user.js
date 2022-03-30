@@ -86,24 +86,29 @@ router.post('/signin', async(req, res) => {
   try {
 
     const cur_user = await User.findOne({phone: req.body.phone})
-    const phone_user= cur_user["phone"]
-
-    if (phone_user)
-    {
-      if(await argon2.verify(cur_user["password"], req.body.password) )
-      {
-      const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
-        expiresIn: process.env.TIME_EXPIRED * 1000})
-      
-      res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
-      res.status(200).json({success: true, message: "LogIn Successfully"}).end()
-      }
-      else 
-        res.status(401).json({success: false, message: "Wrong password"})
-    }
-    else
-    {
+    if (!cur_user){
       res.status(403).json({success: false, message: "Unauthorized phone number"})
+    }
+    else{
+      const phone_user= cur_user["phone"]
+
+      if (phone_user)
+      {
+        if(await argon2.verify(cur_user["password"], req.body.password) )
+        {
+        const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
+          expiresIn: process.env.TIME_EXPIRED * 1000})
+        
+        res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
+        res.status(200).json({success: true, message: "LogIn Successfully"}).end()
+        }
+        else 
+          res.status(401).json({success: false, message: "Wrong password"})
+      }
+      else
+      {
+        res.status(403).json({success: false, message: "Unauthorized phone number"})
+      }
     }
   }catch(error){
     console.log(error)
