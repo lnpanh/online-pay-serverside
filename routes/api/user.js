@@ -123,7 +123,7 @@ router.post('/signin', async(req, res) => {
   }
 })
 
-router.get('/logOut', async(req, res) => {
+router.get('/logout', async(req, res) => {
   const accessToken = req.cookies.accessToken
   // const accessToken = req.params.accessToken
   console.log(req)
