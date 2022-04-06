@@ -132,7 +132,7 @@ router.get('/logout', async(req, res) => {
   var payload = jwt.decode(accessToken)
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
-    var temp = await User.update({_id: mongoose.Types.ObjectId(userId), "listToken.token":accessToken}, {$set:{"listToken.$.logOutTime":Date.now()}})
+    await User.update({_id: mongoose.Types.ObjectId(userId), "listToken.token":accessToken}, {$set:{"listToken.$.logOutTime":Date.now()}})
     res.clearCookie("accessToken")
     return res.status(200).json({success: true, message: "Bye Bye"}).end()
   }
