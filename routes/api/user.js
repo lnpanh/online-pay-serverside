@@ -156,11 +156,11 @@ router.post('/linkAcc', async(req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   try {
     if (cur_user["acc_id"]) 
     { 
-      const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}})
+      const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}}, {session})
       
       if (cur_linkAcc.length != 0) 
       {
@@ -178,8 +178,8 @@ router.post('/linkAcc', async(req, res) => {
     else
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      const newList = ListAcc.create([{linkAcc: [newAcc]}], {session})
-      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session})
+      const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
+      await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).set({$set: {acc_id: newList._id}}, {session})
       res.status(200).json({success: true, message: "Link Account successfully"})
     }
     await session.commitTransaction()
@@ -227,7 +227,7 @@ router.get('/getListAcc/:linkType', async(req, res) => {
         {
           const num = encode(item.accNum)
           d.push({ "accNum" : num, "partiesName" :item.partiesName, "_id": item._id})
-          
+          console.log(item)
         }
       })
       
