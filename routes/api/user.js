@@ -100,6 +100,7 @@ router.post('/signin', async(req, res) => {
           expiresIn: process.env.TIME_EXPIRED * 1000})
         
         res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
+        console.log(accessToken)
         res.status(200).json({success: true, message: "LogIn Successfully"}).end()
         }
         else 
@@ -195,6 +196,7 @@ router.post('/linkAcc', async(req, res) => {
 router.get('/getListAcc/:linkType', async(req, res) => {
 
   const accessToken = req.cookies.accessToken
+  console.log(accessToken)
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
   }
