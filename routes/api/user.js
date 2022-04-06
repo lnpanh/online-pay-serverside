@@ -103,7 +103,8 @@ router.post('/signin', async(req, res) => {
         const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
           expiresIn: process.env.TIME_EXPIRED * 1000})
         
-        await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)},{$push: {listToken: {token: accessToken, logOutTime:process.env.TIME_EXPIRED*1000 + Date.now()}}})
+        await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)},{$push: {listToken: {token: accessToken, logOutTime: process.env.TIME_EXPIRED*1000 + Date.now()}}})
+        console.log(process.env.TIME_EXPIRED*1000 + Date.now())
 
         res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
         // console.log(accessToken)
@@ -134,7 +135,7 @@ router.get('/logout', async(req, res) => {
   var payload = jwt.decode(accessToken)
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
-    var temp = await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userId)}, {$set:{"listToken.$[element].logOutTime":Date.now()}}, {arrayFilters: [{"element.token":accessToken}]})
+    var temp = await User.update({_id: mongoose.Types.ObjectId(userId), "listToken.token":accessToken}, {$set:{"listToken.$.logOutTime":Date.now()}})
     console.log(temp)
     res.clearCookie("accessToken")
     return res.status(200).json({success: true, message: "Bye Bye"}).end()
