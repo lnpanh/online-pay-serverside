@@ -178,7 +178,7 @@ router.post('/linkAcc', async(req, res) => {
     else
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
+      const newList = ListAcc.create([{linkAcc: [newAcc]}], {session})
       await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session})
       res.status(200).json({success: true, message: "Link Account successfully"})
     }
