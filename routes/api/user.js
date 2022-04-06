@@ -135,6 +135,7 @@ router.get('/logOut', async(req, res) => {
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
     await User.findOne({_id: mongoose.Types.ObjectId(userId)})["listToken"].find({array: {$slice : -1}}).update({logOutTime:Date.now()})
+    res.clearCookie("accessToken")
     return res.status(200).json({success: true, message: "Bye Bye"}).end()
   }
   else {
@@ -243,7 +244,7 @@ router.get('/getListAcc/:linkType', async(req, res) => {
     const cur_list = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {linkType : req.params.linkType}}})
     if (cur_list == null)
     {
-      return res.status(401).json({success: false, message: "This type of link account is not existed"})
+      return res.status(200).json({success: true, message: "This type of link account is not existed", data: []})
     }
     else
     {
