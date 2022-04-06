@@ -126,7 +126,7 @@ router.post('/signin', async(req, res) => {
 router.get('/logOut', async(req, res) => {
   const accessToken = req.cookies.accessToken
   // const accessToken = req.params.accessToken
-  console.log(accessToken)
+  console.log(req)
 
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
