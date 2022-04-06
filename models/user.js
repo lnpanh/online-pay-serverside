@@ -36,7 +36,11 @@ const UserSchema = new mongoose.Schema({
   balance: {
     type: Number,
     default: 100000
-  }
+  },
+  listToken: {
+    type: Array,
+    default: []
+}
 });
 
 module.exports = User = mongoose.model('USER_DOC', UserSchema);

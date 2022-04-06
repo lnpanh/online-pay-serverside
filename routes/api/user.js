@@ -66,11 +66,15 @@ router.post('/register', async(req, res) => {
 
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
       expiresIn: process.env.TIME_EXPIRED * 1000})
+
+    await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {listToken: {token: accessToken, logOutTime:process.env.TIME_EXPIRED*1000 + Date.now()}}}, {session})
+      
     res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
     res.status(200).json({success: true, message: "Register Successfully"}).end()
     
     await session.commitTransaction()
     session.endSession()
+
   }catch(error){
     await session.abortTransaction()
     session.endSession()
@@ -99,6 +103,8 @@ router.post('/signin', async(req, res) => {
         const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
           expiresIn: process.env.TIME_EXPIRED * 1000})
         
+        await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)},{$push: {listToken: {token: accessToken, logOutTime:process.env.TIME_EXPIRED*1000 + Date.now()}}})
+
         res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
         console.log(accessToken)
         res.status(200).json({success: true, message: "LogIn Successfully"}).end()
@@ -117,6 +123,25 @@ router.post('/signin', async(req, res) => {
   }
 })
 
+router.get('/logOut', async(req, res) => {
+  const accessToken = req.cookies.accessToken
+  // const accessToken = req.params.accessToken
+  console.log(accessToken)
+
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userId = payload['userId']
+    await User.findOne({_id: mongoose.Types.ObjectId(userId)})["listToken"].find({array: {$slice : -1}}).update({logOutTime:Date.now()})
+    return res.status(200).json({success: true, message: "Bye Bye"}).end()
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
+})
+
 router.get('/welcome', async(req, res) => {
   const accessToken = req.cookies.accessToken
   // const accessToken = req.params.accessToken
@@ -131,7 +156,7 @@ router.get('/welcome', async(req, res) => {
     console.log(userId)
     return res.status(200).json({success: true, message: "Welcome"}).end()
   }
-  else{
+  else {
     return res.status(401).json({success: false, message: "Token is expired"}).end()
   }
 })
