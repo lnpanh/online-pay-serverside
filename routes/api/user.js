@@ -104,10 +104,9 @@ router.post('/signin', async(req, res) => {
           expiresIn: process.env.TIME_EXPIRED * 1000})
         
         await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)},{$push: {listToken: {token: accessToken, logOutTime: process.env.TIME_EXPIRED*1000 + Date.now()}}})
-        console.log(process.env.TIME_EXPIRED*1000 + Date.now())
 
         res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
-        // console.log(accessToken)
+    
         res.status(200).json({success: true, message: "LogIn Successfully"}).end()
         }
         else 
@@ -126,8 +125,6 @@ router.post('/signin', async(req, res) => {
 
 router.get('/logout', async(req, res) => {
   const accessToken = req.cookies.accessToken
-  // const accessToken = req.params.accessToken
-  // console.log(accessToken)
 
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
@@ -136,7 +133,6 @@ router.get('/logout', async(req, res) => {
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
     var temp = await User.update({_id: mongoose.Types.ObjectId(userId), "listToken.token":accessToken}, {$set:{"listToken.$.logOutTime":Date.now()}})
-    console.log(temp)
     res.clearCookie("accessToken")
     return res.status(200).json({success: true, message: "Bye Bye"}).end()
   }
@@ -147,8 +143,6 @@ router.get('/logout', async(req, res) => {
 
 router.get('/welcome', async(req, res) => {
   const accessToken = req.cookies.accessToken
-  // const accessToken = req.params.accessToken
-  // console.log(accessToken)
 
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
@@ -224,7 +218,7 @@ router.post('/linkAcc', async(req, res) => {
 router.get('/getListAcc/:linkType', async(req, res) => {
 
   const accessToken = req.cookies.accessToken
-  // console.log(accessToken)
+
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
   }
@@ -257,7 +251,6 @@ router.get('/getListAcc/:linkType', async(req, res) => {
         {
           const num = encode(item.accNum)
           d.push({ "accNum" : num, "partiesName" :item.partiesName, "_id": item._id})
-          // console.log(item)
         }
       })
       
