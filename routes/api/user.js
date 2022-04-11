@@ -182,12 +182,12 @@ router.post('/linkAcc', async(req, res) => {
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   
-  console.log("User" , cur_user)
+  
   try {
     if (cur_user["acc_id"]) 
     { 
       const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}}, {session})
-      
+      console.log("User" , cur_linkAcc)
       if (cur_linkAcc.length != 0) 
       {
         await session.abortTransaction()
