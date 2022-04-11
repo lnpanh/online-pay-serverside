@@ -134,7 +134,7 @@ router.get('/logOut', async(req, res) => {
   var payload = jwt.decode(accessToken)
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
-    await User.findOne({_id: mongoose.Types.ObjectId(userId)})["listToken"].find({array: {$slice : -1}}).update({logOutTime:Date.now()})
+    await User.findOne({_id: mongoose.Types.ObjectId(userId)})["listToken"].findOne({array: {$slice : -1}}).update({logOutTime:Date.now()})
     return res.status(200).json({success: true, message: "Bye Bye"}).end()
   }
   else {
