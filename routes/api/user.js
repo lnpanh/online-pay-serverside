@@ -205,7 +205,7 @@ router.post('/linkAcc', async(req, res) => {
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
       // const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
-      const newList = new ListAcc({TransList: [newTrans_cur]})
+      const newList = new ListAcc({LinkAcc: [newAcc]})
       await newList.save().session(session)
 //               await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).set({$set: {acc_id: newList._id}}, {session})
