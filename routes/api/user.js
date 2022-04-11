@@ -182,7 +182,7 @@ router.post('/linkAcc', async(req, res) => {
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   
-
+  console.log("User" , cur_user)
   try {
     if (cur_user["acc_id"]) 
     { 
@@ -211,6 +211,7 @@ router.post('/linkAcc', async(req, res) => {
     await session.commitTransaction()
     session.endSession()
   } catch(error) {
+    console.log(error)
     await session.abortTransaction()
     session.endSession()
     return res.status(500).json({success: false, message: "Server error"})
