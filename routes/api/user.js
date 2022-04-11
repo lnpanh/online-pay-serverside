@@ -205,11 +205,13 @@ router.post('/linkAcc', async(req, res) => {
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
       // const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
-      const newList = new ListAcc({LinkAcc: [newAcc]})
-      await newList.save().session(session)
+      const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
+
+      // const newList = new ListAcc({linkAcc: [newAcc]})
+      // await newList.save()
 //               await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
-      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).set({$set: {acc_id: newList._id}}, {session})
-      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
+      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session})
+      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
 
       res.status(200).json({success: true, message: "Link Account successfully"})
     }
