@@ -132,7 +132,7 @@ router.get('/logout', async(req, res) => {
   var payload = jwt.decode(accessToken)
   if (Date.now() < payload['exp'] *1000){
     var userId = payload['userId']
-    await User.update({_id: mongoose.Types.ObjectId(userId), "listToken.token":accessToken}, {$set:{"listToken.$.logOutTime":Date.now()}})
+    await User.updateOne({_id: mongoose.Types.ObjectId(userId), "listToken.token":accessToken}, {$set:{"listToken.$.logOutTime":Date.now()}})
     res.clearCookie("accessToken")
     return res.status(200).json({success: true, message: "Bye Bye"}).end()
   }
@@ -179,7 +179,7 @@ router.post('/linkAcc', async(req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)},null, {session})
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   try {
     if (cur_user["acc_id"]) 
     { 
