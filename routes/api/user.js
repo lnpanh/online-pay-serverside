@@ -178,7 +178,7 @@ router.post('/linkAcc', async(req, res) => {
 
   
   const session = await mongoose.startSession();
-  session.startTransaction();
+  session.startTransaction({mode: "primary"});
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
@@ -214,6 +214,7 @@ router.post('/linkAcc', async(req, res) => {
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
       console.log(newList._id)
       await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
+
       res.status(200).json({success: true, message: "Link Account successfully - 2"})
     }
     await session.commitTransaction()
