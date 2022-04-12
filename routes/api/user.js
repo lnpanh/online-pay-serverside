@@ -457,13 +457,15 @@ router.post('/transaction', async(req, res) => {
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }
           } else {
+            res.status(401).json({success: false, message: "Unauthorized balance"})
             await session.abortTransaction()
             session.endSession()
-            res.status(401).json({success: false, message: "Unauthorized balance"})
+            
           }
+          res.status(200).json({success: true, message: "Transfer successfully"})
           await session.commitTransaction()
           session.endSession()
-          res.status(200).json({success: true, message: "Transfer successfully"})
+          
         } 
         catch (error) {
         await session.abortTransaction()
