@@ -443,7 +443,8 @@ router.post('/transaction', async(req, res) => {
             if (cur_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
               res.status(200).json({success: true, message: "Transfer successfully"})
-            } else { 
+            } 
+            else { 
               const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session: session})
               res.status(200).json({success: true, message: "Transfer successfully"})
@@ -458,16 +459,17 @@ router.post('/transaction', async(req, res) => {
           } else {
             await session.abortTransaction()
             session.endSession()
-            return res.status(401).json({success: false, message: "Unauthorized balance"})
+            res.status(401).json({success: false, message: "Unauthorized balance"})
           }
           await session.commitTransaction()
           session.endSession()
-          return res.status(200).json({success: true, message: "Transfer successfully"})
-        } catch (error) {
+          res.status(200).json({success: true, message: "Transfer successfully"})
+        } 
+        catch (error) {
         await session.abortTransaction()
         session.endSession()
-        console.log(error);
-        return res.status(500).json({success: false, message: "Server error"})
+        // console.log(error);
+        res.status(500).json({success: false, message: "Server error"})
       }
     }
   } else if (req.body.type  == "deposit")
