@@ -180,8 +180,8 @@ router.post('/linkAcc', async(req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
-  // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session)
+  // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   console.log("User" , cur_user)
   
   try {
@@ -206,10 +206,9 @@ router.post('/linkAcc', async(req, res) => {
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
       // const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
-      const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
 
-      // const newList = new ListAcc({linkAcc: [newAcc]})
-      // await newList.save()
+      const newList = new ListAcc({linkAcc: [newAcc]})
+      await newList.save({session})
 //               await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {hist_id: newList._id}})
       await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
