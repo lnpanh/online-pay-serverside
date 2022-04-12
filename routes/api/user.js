@@ -205,15 +205,15 @@ router.post('/linkAcc', async(req, res) => {
     else
     {
       // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      const newList = ListAcc.create([{linkAcc: [newAcc]}], {session:session})
+      // const newList = ListAcc.create([{linkAcc: [newAcc]}], {session:session})
 
-      // const newList = new ListAcc({linkAcc: [newAcc]})
-      // await newList.save({session})
-      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
+      const newList = new ListAcc({linkAcc: [newAcc]})
+      await newList.save()
+      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
       // await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
       console.log(newList._id)
-      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
+      // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
 
       
