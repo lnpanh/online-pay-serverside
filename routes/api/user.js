@@ -177,8 +177,8 @@ router.post('/linkAcc', async(req, res) => {
   }
 
   
-  const session = await mongoose.startSession();
-  session.startTransaction({mode: "primary"});
+  // const session = await mongoose.startSession();
+  // session.startTransaction({mode: "primary"});
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
@@ -218,13 +218,13 @@ router.post('/linkAcc', async(req, res) => {
 
       
     }
-    await session.commitTransaction()
-    session.endSession()
+    // await session.commitTransaction()
+    // session.endSession()
     return res.status(200).json({success: true, message: "Link Account successfully - 2"})
   } catch(error) {
     console.log(error)
-    await session.abortTransaction()
-    session.endSession()
+    // await session.abortTransaction()
+    // session.endSession()
     return res.status(500).json({success: false, message: "Server error"})
   }
 
