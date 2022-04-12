@@ -180,8 +180,8 @@ router.post('/linkAcc', async(req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
-  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session)
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
+  // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session)
   console.log("User" , cur_user)
   
   try {
