@@ -205,7 +205,7 @@ router.post('/linkAcc', async(req, res) => {
     else
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      const newList = ListAcc.create([{linkAcc: [newAcc]}], {session})
+      const newList = ListAcc.create([{linkAcc: [newAcc]}], {session:session})
 
       // const newList = new ListAcc({linkAcc: [newAcc]})
       // await newList.save({session})
