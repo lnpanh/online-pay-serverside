@@ -468,10 +468,11 @@ router.post('/transaction', async(req, res) => {
           
         } 
         catch (error) {
+        res.status(500).json({success: false, message: "Server error"})
         await session.abortTransaction()
         session.endSession()
         // console.log(error);
-        res.status(500).json({success: false, message: "Server error"})
+        
       }
     }
   } else if (req.body.type  == "deposit")
