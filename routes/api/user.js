@@ -217,12 +217,12 @@ router.post('/linkAcc', async(req, res) => {
 
       res.status(200).json({success: true, message: "Link Account successfully - 2"})
     }
-    // await session.commitTransaction()
-    // session.endSession()
+    await session.commitTransaction()
+    session.endSession()
   } catch(error) {
     console.log(error)
-    // await session.abortTransaction()
-    // session.endSession()
+    await session.abortTransaction()
+    session.endSession()
     return res.status(500).json({success: false, message: "Server error"})
   }
 
