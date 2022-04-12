@@ -191,8 +191,8 @@ router.post('/linkAcc', async(req, res) => {
       console.log("User" , cur_linkAcc)
       if (cur_linkAcc.length != 0) 
       {
-        await session.abortTransaction()
-        session.endSession()
+        // await session.abortTransaction()
+        // session.endSession()
         return res.status(401).json({success: false, message: "Account existed"})
       }
       else
@@ -462,7 +462,7 @@ router.post('/transaction', async(req, res) => {
           }
           await session.commitTransaction()
           session.endSession()
-          res.status(200).json({success: true, message: "Transfer successfully"})
+          return res.status(200).json({success: true, message: "Transfer successfully"})
         } catch (error) {
         await session.abortTransaction()
         session.endSession()
