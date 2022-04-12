@@ -213,8 +213,8 @@ router.post('/linkAcc', async(req, res) => {
       // await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
       console.log(newList._id)
-      // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
-      await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
+      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
+      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
 
       
     }
