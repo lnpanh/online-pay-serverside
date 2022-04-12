@@ -425,6 +425,7 @@ router.post('/transaction', async(req, res) => {
   
   if (req.body.type == "transfer") {
     const rcv_user = await User.findOne({phone: req.body.phone})
+    console.log(rcv_user)
     if (!rcv_user || cur_user._id.equals(rcv_user._id)) {
       return res.status(401).json({success: false, message: "Unauthorized phone number"})
     } else {
