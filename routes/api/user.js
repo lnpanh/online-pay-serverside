@@ -407,6 +407,7 @@ router.post('/transaction', async(req, res) => {
   // const userID = jwt.decode(accessToken)['userId']
   
   const accessToken = req.cookies.accessToken
+
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
   }
@@ -419,15 +420,15 @@ router.post('/transaction', async(req, res) => {
   }
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  
+  console.log(cur_user._id)
+
   const session = await mongoose.startSession();
   session.startTransaction();
   
   if (req.body.type == "transfer") {
     const rcv_user = await User.findOne({phone: req.body.phone})
-    console.log(rcv_user)
-    console.log(cur_user)
-
+    console.log(rcv_user._id)
+    
     if (!rcv_user || cur_user._id.equals(rcv_user._id)) {
       return res.status(401).json({success: false, message: "Unauthorized phone number"})
     } else {
