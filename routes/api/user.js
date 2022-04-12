@@ -177,8 +177,8 @@ router.post('/linkAcc', async(req, res) => {
   }
 
   
-  // const session = await mongoose.startSession();
-  // session.startTransaction();
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
@@ -191,8 +191,8 @@ router.post('/linkAcc', async(req, res) => {
       console.log("User" , cur_linkAcc)
       if (cur_linkAcc.length != 0) 
       {
-        // await session.abortTransaction()
-        // session.endSession()
+        await session.abortTransaction()
+        session.endSession()
         return res.status(401).json({success: false, message: "Account existed"})
       }
       else
@@ -205,13 +205,15 @@ router.post('/linkAcc', async(req, res) => {
     else
     {
       const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      // const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session})
+      const newList = ListAcc.create([{linkAcc: [newAcc]}], {session})
 
-      const newList = new ListAcc({linkAcc: [newAcc]})
-      await newList.save({session})
-      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
+      // const newList = new ListAcc({linkAcc: [newAcc]})
+      // await newList.save({session})
+      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
       // await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
+
+      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
 
       res.status(200).json({success: true, message: "Link Account successfully - 2"})
     }
