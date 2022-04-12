@@ -466,16 +466,17 @@ router.post('/transaction', async(req, res) => {
           session.endSession()
           
         } 
-        catch (error) {
-        await session.abortTransaction()
-        session.endSession()
-        console.log(error);
-        res.status(500).json({success: false, message: "Server error"})
+        catch(error){
+          await session.abortTransaction()
+          session.endSession()
+          console.log(error)
+          res.status(500).json({success: false, message: "Server Error"})
+        }
         
-        
+      
       }
     }
-  } else if (req.body.type  == "deposit")
+  else if (req.body.type  == "deposit")
   {
     try {
       const cur_acc = await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])})
