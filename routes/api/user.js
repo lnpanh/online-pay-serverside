@@ -182,7 +182,7 @@ router.post('/linkAcc', async(req, res) => {
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  
+  const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
   
   try {
     if (cur_user["acc_id"]) 
@@ -197,14 +197,14 @@ router.post('/linkAcc', async(req, res) => {
       }
       else
       {
-        const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
+        // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
         await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
         res.status(200).json({success: true, message: "Link Account successfully - 1"})
       }
     }
     else
     {
-      const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
+      // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
       const newList = ListAcc.create([{linkAcc: [newAcc]}], {session:session})
 
       // const newList = new ListAcc({linkAcc: [newAcc]})
