@@ -444,8 +444,8 @@ router.post('/transaction', async(req, res) => {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
               res.status(200).json({success: true, message: "Transfer successfully"})
             } else { 
-              const newList = await ListTrans.create([{TransList: [newTrans_cur]}], {session})
-              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session})
+              const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session: session})
               res.status(200).json({success: true, message: "Transfer successfully"})
             }            
             if(rcv_user["hist_id"]) {
