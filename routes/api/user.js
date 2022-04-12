@@ -177,8 +177,8 @@ router.post('/linkAcc', async(req, res) => {
   }
 
   
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
@@ -187,18 +187,18 @@ router.post('/linkAcc', async(req, res) => {
   try {
     if (cur_user["acc_id"]) 
     { 
-      const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}}, {session})
+      const cur_linkAcc = await ListAcc.find({ _id : mongoose.Types.ObjectId(cur_user["acc_id"]), linkAcc: {$elemMatch: {accNum : req.body.accNum, partiesName: req.body.partiesName}}})
       console.log("User" , cur_linkAcc)
       if (cur_linkAcc.length != 0) 
       {
-        await session.abortTransaction()
-        session.endSession()
+        // await session.abortTransaction()
+        // session.endSession()
         return res.status(401).json({success: false, message: "Account existed"})
       }
       else
       {
         const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {linkAcc: newAcc}}, {session})
+        await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
         res.status(200).json({success: true, message: "Link Account successfully - 1"})
       }
     }
@@ -215,12 +215,12 @@ router.post('/linkAcc', async(req, res) => {
 
       res.status(200).json({success: true, message: "Link Account successfully - 2"})
     }
-    await session.commitTransaction()
-    session.endSession()
+    // await session.commitTransaction()
+    // session.endSession()
   } catch(error) {
     console.log(error)
-    await session.abortTransaction()
-    session.endSession()
+    // await session.abortTransaction()
+    // session.endSession()
     return res.status(500).json({success: false, message: "Server error"})
   }
 
