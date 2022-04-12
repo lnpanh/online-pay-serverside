@@ -442,12 +442,13 @@ router.post('/transaction', async(req, res) => {
           
             if (cur_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
-              res.status(200).json({success: true, message: "Transfer successfully"})
+              // res.status(200).json({success: true, message: "Transfer successfully"})
             } 
             else if (!cur_user["hist_id"]) { 
               const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session: session})
-              res.status(200).json({success: true, message: "Transfer successfully"})
+              
+              // res.status(200).json({success: true, message: "Transfer successfully"})
             }            
             if(rcv_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
@@ -457,13 +458,14 @@ router.post('/transaction', async(req, res) => {
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }
           } else {
-            res.status(401).json({success: false, message: "Unauthorized balance"})
             await session.abortTransaction()
             session.endSession()
+            res.status(401).json({success: false, message: "Unauthorized balance"})
           }
-          res.status(200).json({success: true, message: "Transfer successfully"})
+          
           await session.commitTransaction()
           session.endSession()
+          res.status(200).json({success: true, message: "Transfer successfully"})
           
         } 
         catch(error){
