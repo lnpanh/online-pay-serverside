@@ -420,15 +420,11 @@ router.post('/transaction', async(req, res) => {
   }
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  console.log(cur_user._id)
-
   const session = await mongoose.startSession();
   session.startTransaction();
   
   if (req.body.type == "transfer") {
     const rcv_user = await User.findOne({phone: req.body.phone})
-    console.log(rcv_user._id)
-    
     if (!rcv_user || cur_user._id.equals(rcv_user._id)) {
       return res.status(401).json({success: false, message: "Unauthorized phone number"})
     } else {
@@ -452,6 +448,7 @@ router.post('/transaction', async(req, res) => {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
             } else {
               const newList = await ListTrans.create([{TransList: [newTrans_rcv]}], {session})
+              console.log(newList._id)
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session})
             }
           } else {
