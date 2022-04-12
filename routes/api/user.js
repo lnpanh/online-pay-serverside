@@ -444,14 +444,14 @@ router.post('/transaction', async(req, res) => {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
               res.status(200).json({success: true, message: "Transfer successfully"})
             } 
-            else { 
+            else if (!cur_user["hist_id"]) { 
               const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session: session})
               res.status(200).json({success: true, message: "Transfer successfully"})
             }            
             if(rcv_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
-            } else {
+            } else if (!rcv_user["hist_id"]){
               const newList =  ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
               console.log(newList._id)
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
@@ -460,7 +460,6 @@ router.post('/transaction', async(req, res) => {
             res.status(401).json({success: false, message: "Unauthorized balance"})
             await session.abortTransaction()
             session.endSession()
-            
           }
           res.status(200).json({success: true, message: "Transfer successfully"})
           await session.commitTransaction()
@@ -468,10 +467,11 @@ router.post('/transaction', async(req, res) => {
           
         } 
         catch (error) {
-        res.status(500).json({success: false, message: "Server error"})
         await session.abortTransaction()
         session.endSession()
-        // console.log(error);
+        console.log(error);
+        res.status(500).json({success: false, message: "Server error"})
+        
         
       }
     }
