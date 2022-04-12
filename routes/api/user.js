@@ -212,9 +212,8 @@ router.post('/linkAcc', async(req, res) => {
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
       // await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
-
+      console.log(newList._id)
       await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
-
       res.status(200).json({success: true, message: "Link Account successfully - 2"})
     }
     await session.commitTransaction()
@@ -463,6 +462,7 @@ router.post('/transaction', async(req, res) => {
           }
           await session.commitTransaction()
           session.endSession()
+          res.status(200).json({success: true, message: "Transfer successfully"})
         } catch (error) {
         await session.abortTransaction()
         session.endSession()
