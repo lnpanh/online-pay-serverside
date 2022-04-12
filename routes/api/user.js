@@ -421,7 +421,7 @@ router.post('/transaction', async(req, res) => {
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   const session = await mongoose.startSession();
-  session.startTransaction();
+  session.startTransaction({mode: "primary"});
   
   if (req.body.type == "transfer") {
     const rcv_user = await User.findOne({phone: req.body.phone})
@@ -447,7 +447,10 @@ router.post('/transaction', async(req, res) => {
             if(rcv_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
             } else {
-              const newList = await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
+              let newList = (await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session}))[0]
+              newList.newProp = true
+              newList.$session(session)
+              await newList.save()
               console.log(newList._id)
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }
