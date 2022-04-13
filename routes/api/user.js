@@ -261,6 +261,25 @@ router.get('/getListAcc/:linkType', async(req, res) => {
   }
 })
 
+router.get('/getBalance', async(req, res)=>{
+
+  const accessToken = req.cookies.accessToken
+  if (!accessToken) {
+    return res.status(401).json({success: false, message: "Unauthorized token"}).end()
+  }
+  var payload = jwt.decode(accessToken)
+  if (Date.now() < payload['exp'] *1000){
+    var userID = payload['userId']
+  }
+  else {
+    return res.status(401).json({success: false, message: "Token is expired"}).end()
+  }
+
+  const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
+  return res.status(200).json({success: true, message: "Get balance successfully",data: cur_user["balance"]})
+})
+
+
 function timerMessage() {
   console.log("Thanks for waiting!");
 }
