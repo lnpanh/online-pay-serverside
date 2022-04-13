@@ -197,7 +197,7 @@ router.post('/linkAcc', async(req, res) => {
       }
       else
       {
-        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {TransList: newAcc}}, {session})
+        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {linkAcc: newAcc}}, {session})
       }
     }
     else
