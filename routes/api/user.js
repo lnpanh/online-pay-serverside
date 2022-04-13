@@ -425,7 +425,7 @@ router.post('/transaction', async(req, res) => {
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
   const session = await mongoose.startSession();
-  session.startTransaction({mode: "primary"});
+  session.startTransaction();
   
   if (req.body.type == "transfer") {
     const rcv_user = await User.findOne({phone: req.body.phone})
@@ -445,10 +445,8 @@ router.post('/transaction', async(req, res) => {
             } 
             else if (!cur_user["hist_id"]) { 
               const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
-              console.log(newList._id)
-              // User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
-              await User.updateOne({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
-
+              console.log(newList[0]._id)
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }            
             if(rcv_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
@@ -456,9 +454,7 @@ router.post('/transaction', async(req, res) => {
             else if (!rcv_user["hist_id"]){
               const newList =  ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
               console.log(newList._id)
-              // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
-              await User.updateOne({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
-
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }
           } else {
             await session.abortTransaction()
