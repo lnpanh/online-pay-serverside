@@ -199,7 +199,7 @@ router.post('/linkAcc', async(req, res) => {
       {
         // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
         // await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
-        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {TransList: newAcc_cur}}, {session})
+        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {TransList: newAcc}}, {session})
         res.status(200).json({success: true, message: "Link Account successfully - 1"})
       }
     }
