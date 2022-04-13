@@ -444,19 +444,19 @@ router.post('/transaction', async(req, res) => {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
             } 
             else if (!cur_user["hist_id"]) { 
-              const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
-              const temp = await newList
-              console.log("cur" + temp["_id"])
-              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: temp._id}}, {session: session})
+              const newList = await ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
+              // const temp = await newList
+              console.log("cur" + newList["_id"])
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }            
             if(rcv_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
             } 
             else if (!rcv_user["hist_id"]){
-              const newList =  ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
-              const temp = await newList
-              console.log("rcv" + temp["_id"])
-              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: temp._id}}, {session: session})
+              const newList =  await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
+              // const temp = await newList
+              console.log("rcv" + newList["_id"])
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }
           } else {
             await session.abortTransaction()
