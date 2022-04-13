@@ -177,8 +177,8 @@ router.post('/linkAcc', async(req, res) => {
   }
 
   
-  // const session = await mongoose.startSession();
-  // session.startTransaction({mode: "primary"});
+  const session = await mongoose.startSession();
+  session.startTransaction({mode: "primary"});
 
   // const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session})
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
@@ -191,40 +191,41 @@ router.post('/linkAcc', async(req, res) => {
       console.log("User" , cur_linkAcc)
       if (cur_linkAcc.length != 0) 
       {
-        // await session.abortTransaction()
-        // session.endSession()
+        await session.abortTransaction()
+        session.endSession()
         return res.status(401).json({success: false, message: "Account existed"})
       }
       else
       {
         // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-        await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
+        // await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
+        await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {TransList: newAcc_cur}}, {session})
         res.status(200).json({success: true, message: "Link Account successfully - 1"})
       }
     }
     else
     {
       // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-      // const newList = ListAcc.create([{linkAcc: [newAcc]}], {session:session})
+      const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session:session})
 
-      const newList = new ListAcc({linkAcc: [newAcc]})
-      await newList.save()
-      await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
+      // const newList = new ListAcc({linkAcc: [newAcc]})
+      // await newList.save()
+      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
       // await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
-      console.log(newList._id)
-      // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: newList._id}}, {session: session})
+      // console.log(newList._id)
+      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: mongoose.Types.ObjectId(newList[0]._id)}}, {session: session})
       // await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
 
       
     }
-    // await session.commitTransaction()
-    // session.endSession()
+    await session.commitTransaction()
+    session.endSession()
     return res.status(200).json({success: true, message: "Link Account successfully - 2"})
   } catch(error) {
     console.log(error)
-    // await session.abortTransaction()
-    // session.endSession()
+    await session.abortTransaction()
+    session.endSession()
     return res.status(500).json({success: false, message: "Server error"})
   }
 
@@ -445,18 +446,18 @@ router.post('/transaction', async(req, res) => {
             } 
             else if (!cur_user["hist_id"]) { 
               const newList = await ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
-              console.log("cur" + newList)
-              User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
+              // console.log("cur" + newList)
+              User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: mongoose.Types.ObjectId(newList[0]._id)}}, {session: session})
             }            
             if(rcv_user["hist_id"]) {
               await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(rcv_user["hist_id"])}, {$push : {TransList: newTrans_rcv}}, {session})
             } 
             else if (!rcv_user["hist_id"]){
               const newList =  await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
-              console.log("rcv" + newList[0]._id)
+              // console.log("rcv" + newList[0]._id)
               // console.log("type " + typeof(newList))
               // console.log("_id " + Object.values(newList)[1])
-              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: Object.values(newList)[1]} },{ session: session})
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: mongoose.Types.ObjectId(newList[0]._id)} },{ session: session})
              
             }
           } else {
