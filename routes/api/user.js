@@ -449,7 +449,7 @@ router.post('/transaction', async(req, res) => {
           } else {
             await session.abortTransaction()
             session.endSession()
-            res.status(401).json({success: false, message: "Unauthorized balance"})
+            return res.status(401).json({success: false, message: "Unauthorized balance"})
           }
           
           await session.commitTransaction()
@@ -460,7 +460,7 @@ router.post('/transaction', async(req, res) => {
           await session.abortTransaction()
           session.endSession()
           console.log(error)
-          res.status(500).json({success: false, message: "Server Error"})
+          return res.status(500).json({success: false, message: "Server Error"})
         }
         
       
