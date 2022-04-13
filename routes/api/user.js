@@ -197,36 +197,22 @@ router.post('/linkAcc', async(req, res) => {
       }
       else
       {
-        // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
-        // await ListAcc.findOne({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}).updateOne({$push : {linkAcc: newAcc}})
         await ListAcc.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["acc_id"])}, {$push : {TransList: newAcc}}, {session})
-        res.status(200).json({success: true, message: "Link Account successfully - 1"})
       }
     }
     else
     {
-      // const newAcc = new Acc({accNum : req.body.accNum, partiesName: req.body.partiesName, linkType: req.body.linkType, token: req.body.token})
       const newList = await ListAcc.create([{linkAcc: [newAcc]}], {session:session})
-
-      // const newList = new ListAcc({linkAcc: [newAcc]})
-      // await newList.save()
-      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).updateOne({$set: {acc_id: newList._id}})
-      // await User.find({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
-      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}).session(session).set({$set: {acc_id: newList._id}}).session(session)
-      // console.log(newList._id)
       await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {acc_id: mongoose.Types.ObjectId(newList[0]._id)}}, {session: session})
-      // await User.findOne({_id: mongoose.Types.ObjectId(userID)}, {session}).updateOne({$set: {acc_id: newList._id}}, {session})
-
-      
     }
     await session.commitTransaction()
     session.endSession()
-    return res.status(200).json({success: true, message: "Link Account successfully - 2"})
+    res.status(200).json({success: true, message: "Link Account successfully"})
   } catch(error) {
     console.log(error)
     await session.abortTransaction()
     session.endSession()
-    return res.status(500).json({success: false, message: "Server error"})
+    res.status(500).json({success: false, message: "Server error"})
   }
 
 })
