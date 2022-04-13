@@ -456,7 +456,7 @@ router.post('/transaction', async(req, res) => {
               const newList =  await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
               console.log("rcv" + newList)
               // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id} },{ returnDocument: 'after', session: session})
-              User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id} }, options, function (err, session) {
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id} }, options, function (err, session) {
                 if (err) {
                     res.status(409).json({
                         success: false,
