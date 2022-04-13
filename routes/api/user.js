@@ -484,16 +484,15 @@ router.post('/transaction', async(req, res) => {
       if (cur_user["hist_id"]) 
       {
         await ListTrans.findOneAndUpdate({ _id : mongoose.Types.ObjectId(cur_user["hist_id"])}, {$push : {TransList: newTrans_cur}}, {session})
-        res.status(200).json({success: true, message: "Deposit successfully"})
       }
       else
       { 
         const newList = await ListTrans.create([{TransList: [newTrans_cur]}], {session})
-        await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: newList._id}}, {session})
-        res.status(200).json({success: true, message: "Deposit successfully"})  
+        await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(userID)}, {$set: {hist_id: mongoose.Types.ObjectId(newList[0]._id)}}, {session})
       }
       await session.commitTransaction()
       session.endSession()
+      res.status(200).json({success: true, message: "Deposit successfully"})
     } catch (error) {
       await session.abortTransaction()
       session.endSession()
