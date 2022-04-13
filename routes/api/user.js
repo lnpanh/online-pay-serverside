@@ -420,7 +420,7 @@ router.post('/transaction', async(req, res) => {
       return res.status(401).json({success: false, message: "Unauthorized phone number"})
     } else {
         try {
-          if (req.body.money < cur_user["balance"]) {
+          if (Number(req.body.money) < cur_user["balance"]) {
             const newTrans_cur = new Trans({name_rcv: req.body.name, phone_rcv: req.body.phone, amount_money: req.body.money, type: req.body.type, dt: Date.now()})
             const newTrans_rcv = new Trans({name_send: cur_user["name"], phone_send: cur_user["phone"], amount_money: req.body.money, type: "Receive", dt: Date.now()})
 
@@ -440,13 +440,11 @@ router.post('/transaction', async(req, res) => {
             } 
             else if (!rcv_user["hist_id"]){
               const newList =  await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
-              // console.log("rcv" + newList[0]._id)
-              // console.log("type " + typeof(newList))
-              // console.log("_id " + Object.values(newList)[1])
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: mongoose.Types.ObjectId(newList[0]._id)} },{ session: session})
              
             }
-          } else {
+          } 
+          else {
             await session.abortTransaction()
             session.endSession()
             return res.status(401).json({success: false, message: "Unauthorized balance"})
