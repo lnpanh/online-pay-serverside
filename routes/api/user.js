@@ -445,7 +445,8 @@ router.post('/transaction', async(req, res) => {
             } 
             else if (!cur_user["hist_id"]) { 
               const newList = ListTrans.create([{TransList: [newTrans_cur]}], {session: session})
-              console.log("cur" + newList)
+              const temp = await newList
+              console.log("cur" + temp)
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }            
             if(rcv_user["hist_id"]) {
@@ -453,7 +454,8 @@ router.post('/transaction', async(req, res) => {
             } 
             else if (!rcv_user["hist_id"]){
               const newList =  ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
-              console.log("rcv" + newList)
+              const temp = await newList
+              console.log("rcv" + temp)
               await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id}}, {session: session})
             }
           } else {
