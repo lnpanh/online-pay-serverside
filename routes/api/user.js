@@ -455,15 +455,9 @@ router.post('/transaction', async(req, res) => {
               var options = { upsert: true};
               const newList =  await ListTrans.create([{TransList: [newTrans_rcv]}], {session: session})
               console.log("rcv" + newList)
-              // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id} },{ returnDocument: 'after', session: session})
-              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id} }, options, function (err, session) {
-                if (err) {
-                    res.status(409).json({
-                        success: false,
-                        message: 'Error creating/updating session'
-                    });
-                } 
-            });
+              console.log("_id" + newList._id)
+              await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(rcv_user._id)}, {$set: {hist_id: newList._id} },{ session: session})
+             
             }
           } else {
             await session.abortTransaction()
