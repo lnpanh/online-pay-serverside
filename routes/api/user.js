@@ -627,8 +627,7 @@ function encode(account)
 
 
 router.get('/getInfor', async(req, res)=>{
-  console.log(req)
-
+  
   const accessToken = req.cookies.accessToken
   if (!accessToken) {
     return res.status(401).json({success: false, message: "Unauthorized token"}).end()
