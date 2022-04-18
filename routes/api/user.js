@@ -641,7 +641,8 @@ router.get('/getInfor', async(req, res)=>{
   }
 
   const cur_user = await User.findOne({_id: mongoose.Types.ObjectId(userID)})
-  return res.status(200).json({success: true, message: "Get information successfully",data: cur_user})
+  const user_data = {"name":cur_user.name, "phone":cur_user.phone, "email":cur_user.email, "dob": cur_user.dob, "balance":cur_user.balance}
+  return res.status(200).json({success: true, message: "Get information successfully",data: user_data})
 })
 
 
