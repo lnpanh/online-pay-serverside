@@ -35,12 +35,16 @@ const UserSchema = new mongoose.Schema({
   },
   balance: {
     type: Number,
-    default: 100000
+    default: 0
   },
-  listToken: {
+  userSession: {
     type: Array,
     default: []
-}
+  },
+  hasFace: {
+    type: Boolean,
+    default: false
+  }
 });
 
 module.exports = User = mongoose.model('USER_DOC', UserSchema);
