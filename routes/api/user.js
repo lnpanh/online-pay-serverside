@@ -63,18 +63,20 @@ router.post('/register', async(req, res) => {
 
     // All good
     const hashPassword = await argon2.hash(password)
-    const newUser = await User.create([{name, phone, password: hashPassword, email, dob}], {session})
+    const newUser = new User({name, phone, password: hashPassword, email, dob})
+    await newUser.save()
 
     const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
       expiresIn: process.env.TIME_EXPIRED * 1000})
-
-    await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {listToken: {token: accessToken, logOutTime:process.env.TIME_EXPIRED*1000 + Date.now()}}}, {session})
-      
-    res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
-    res.status(200).json({success: true, message: "Register Successfully"}).end()
     
+    var userSess = {"time_in":Date.now(), "time_out": process.env.TIME_EXPIRED*1000 + Date.now(), "bbox": "", "img_url": "", "accessToken": accessToken}
+    console.log(newUser._id)    
+    await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {userSession:userSess}}, {session})
+    
+    res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
     await session.commitTransaction()
     session.endSession()
+    return res.status(200).json({success: true, message: "Register Successfully"}).end()
 
   }catch(error){
     await session.abortTransaction()
@@ -99,59 +101,35 @@ router.post('/registerWithFace', async(req, res) => {
       id: hashPhone,
       img_link: url
     }
-    request({method:"POST", url:'http://6d1f-35-231-11-90.ngrok.io/signinF',  body: formData, json: true}, async function (err, httpResponse, body) {
+    request({method:"POST", url:'http://b330-34-134-230-22.ngrok.io/registerF',  body: formData, json: true}, async function (err, httpResponse, body) {
       if (err) {
         return console.error('upload failed:', err);
       }
       httpResponse.setEncoding('utf8')
-
-      console.log('Upload successful!  Server responded with:', body);
-      const inforAuthen = JSON.parse(body)
       const hashPassword = await argon2.hash(password)
-      var userSess = {time_in:inforAuthen.timeIn, time_out: inforAuthen.timeIn + process.env.TIME_EXPIRED, bbox: inforAuthen.bbox, img_url: url}
-      const newUser = await User.create([{name, phone, password: hashPassword, email, dob, hasFace: true, userSession: [userSess]}], {session})
+      console.log('Upload successful!  httpResponded with:', httpResponse.body);
+      const inforAuthen = httpResponse.body;
+      const newUser = new User({name, phone, password: hashPassword, email, dob, hasFace: true})
+      await newUser.save();
 
       const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
         expiresIn: process.env.TIME_EXPIRED * 1000})
 
-      // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {listToken: {token: accessToken, logOutTime:process.env.TIME_EXPIRED*1000 + Date.now()}}}, {session})
-        
+      const userSess = {"time_in":inforAuthen.time_in, "time_out": process.env.TIME_EXPIRED*1000 + inforAuthen.time_in, "bbox": inforAuthen.bbox, "img_url": url, "accessToken": accessToken}
+
+      await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {userSession: userSess}}, {session})
+
       res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
-      res.status(200).json({success: true, message: "Register Successfully"}).end()
-      
       await session.commitTransaction()
       session.endSession()
+      return res.status(200).json({success: true, message: "Register Successfully"}).end()
     });
-
-    // const phone_user = await User.findOne({phone})
-    // const email_user = await User.findOne({email})
-
-    // if (phone_user || email_user) {
-    //   await session.abortTransaction()
-    //   session.endSession()
-    //   return res.status(400).json({success: false, message: "Phone or Email existed"})
-    // }
-
-    // // All good
-    // const hashPassword = await argon2.hash(password)
-    // const newUser = await User.create([{name, phone, password: hashPassword, email, dob}], {session})
-
-    // const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
-    //   expiresIn: process.env.TIME_EXPIRED * 1000})
-
-    // await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {listToken: {token: accessToken, logOutTime:process.env.TIME_EXPIRED*1000 + Date.now()}}}, {session})
-      
-    // res.cookie("accessToken", accessToken, { maxAge: process.env.TIME_EXPIRED * 1000, withCredentials: true, httpOnly: true, sameSite: 'None', secure: true })
-    // res.status(200).json({success: true, message: "Register Successfully"}).end()
-    
-    // await session.commitTransaction()
-    // session.endSession()
 
   }catch(error){
     await session.abortTransaction()
     session.endSession()
     console.log(error)
-    res.status(500).json({success: false, message: "Server Error"})
+    return res.status(500).json({success: false, message: "Server Error"})
   }
 })
 
@@ -171,7 +149,7 @@ router.post('/signinWithFace', async(req, res) => {
       "img_link": url
     }
 
-    request({method:"POST", url:'http://6d1f-35-231-11-90.ngrok.io/signinF',  body: formData, json: true}, async function (err, httpResponse, body) {
+    request({method:"POST", url:'http://a136-34-134-230-22.ngrok.io/signinF',  body: formData, json: true}, async function (err, httpResponse, body) {
       if (err) {
         return console.error('upload failed:', err);
       }
@@ -221,7 +199,7 @@ router.post('/signin', async(req, res) => {
         const accessToken = jwt.sign({userId: cur_user._id}, process.env.ACCESS_TOKEN, {
           expiresIn: process.env.TIME_EXPIRED * 1000})
         
-        var userSess = {"time_in":Date.now(), "time_out": process.env.TIME_EXPIRED*1000 + Date.now(), "bbox": [], "img_url": "", "accessToken": accessToken}
+        var userSess = {"time_in":Date.now(), "time_out": process.env.TIME_EXPIRED*1000 + Date.now(), "bbox": "", "img_url": "", "accessToken": accessToken}
         
         await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(cur_user._id)},{$push: {userSession: userSess}})
 
