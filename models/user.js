@@ -25,21 +25,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  acc_id: {
-    type: mongoose.Types.ObjectId,
-    ref: 'listAcc'
-  },
-  hist_id: {
-    type: mongoose.Types.ObjectId,
-    ref: 'listTrans'
-  },
-  balance: {
-    type: Number,
-    default: 0
-  },
+
   userSession: {
     type: Array,
-    default: []
+    default:[]
   },
   hasFace: {
     type: Boolean,
