@@ -94,7 +94,7 @@ router.post('/registerWithFace', async(req, res) => {
       const accessToken = jwt.sign({userId: newUser._id}, process.env.ACCESS_TOKEN, {
         expiresIn: process.env.TIME_EXPIRED * 1000})
 
-      const userSess = {"time_in":inforAuthen.time_in, "time_out": process.env.TIME_EXPIRED*1000 + inforAuthen.time_in, "bbox": inforAuthen.bbox, "img_url": url_img, "accessToken": accessToken}
+      const userSess = {"time_in":inforAuthen.time, "time_out": process.env.TIME_EXPIRED*1000 + inforAuthen.time, "bbox": inforAuthen.bbox, "img_url": url_img, "accessToken": accessToken}
 
       await User.findOneAndUpdate({_id: mongoose.Types.ObjectId(newUser._id)},{$push: {userSession: userSess}}, {session})
 
